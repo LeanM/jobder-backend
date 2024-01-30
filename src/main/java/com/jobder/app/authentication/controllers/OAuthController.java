@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -103,9 +105,19 @@ public class OAuthController {
 
     private JWTokenDTO login(User usuario){
         //No necesito autenticar por que es logueo con google
-        //authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usuario.getUsername(), usuario.getPassword()));
-        //UserDetails user = userService.findByEmail(usuario.getEmail()).orElseThrow();
+
         String jwt = jwtService.getToken(usuario);
+        JWTokenDTO jwTokenDTO = new JWTokenDTO();
+        jwTokenDTO.setAccessToken(jwt);
+
+        return jwTokenDTO;
+    }
+
+    private JWTokenDTO loginWithCredentials(User usuario){
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usuario.getUsername(), usuario.getPassword()));
+        UserDetails user = userService.findByEmail(usuario.getEmail()).orElseThrow();
+
+        String jwt = jwtService.getToken(user);
         JWTokenDTO jwTokenDTO = new JWTokenDTO();
         jwTokenDTO.setAccessToken(jwt);
 
