@@ -1,0 +1,6 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://r4ktutipo:root@cluster0.wm8v4o2.mongodb.net/jobder?retryWrites=true&w=majority
+server:
+  port: 8080
