@@ -20,8 +20,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.BodyInserters;
 
 import java.io.*;
 import java.util.*;
@@ -52,26 +55,29 @@ public class OAuthController {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-
     @PostMapping("/check/code/google")
     public ResponseEntity<?> handleGoogleAuthCode(@RequestBody TokenDTO tokenDTO) throws IOException {
         String code = tokenDTO.getValue();
+        String clientIdAndSecret = googleClientId + googleClientSecret;
+        String authBasic = Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes());
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
+        //headers.setBasicAuth(authBasic);
+        headers.setBasicAuth(googleClientId, googleClientSecret);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Map<String, String> params = new HashMap<>();
         params.put("code", code);
-        params.put("client_id", googleClientId);
-        params.put("client_secret", googleClientSecret);
         params.put("redirect_uri", "http://localhost:3000");
         params.put("grant_type", "authorization_code");
 
         HttpEntity<Map<String, String>> request = new HttpEntity<>(params, headers);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity("https://oauth2.googleapis.com/token", request, Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity("https://www.googleapis.com/oauth2/v4/token", request, Map.class);
         Map<String, Object> responseBody = response.getBody();
+
+        System.out.println(responseBody);
 
         String idToken = (String) responseBody.get("id_token");
 
