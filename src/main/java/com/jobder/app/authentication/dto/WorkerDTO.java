@@ -23,4 +23,7 @@ public class WorkerDTO {
     private Date birthDate;
     private String workSpecialization;
     private String availabilityStatus;
+    private String description;
+    private String workingHours;
+    private String averageRating;
 }

@@ -36,6 +36,9 @@ public class User implements UserDetails {
     //Worker
     private String workSpecialization;
     private String availabilityStatus;
+    private String description;
+    private String workingHours;
+    private String averageRating;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -68,7 +71,7 @@ public class User implements UserDetails {
     }
 
     public WorkerDTO toWorker(){
-        WorkerDTO toReturn = new WorkerDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate,this.workSpecialization,this.availabilityStatus);
+        WorkerDTO toReturn = new WorkerDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating);
 
         return toReturn;
     }
