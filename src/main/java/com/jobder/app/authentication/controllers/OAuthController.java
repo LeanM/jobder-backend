@@ -8,9 +8,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.jobder.app.authentication.config.JwtService;
 import com.jobder.app.authentication.dto.JWTokenDTO;
-import com.jobder.app.authentication.dto.TokenDTO;
-import com.jobder.app.authentication.dto.UserGoogleDTO;
-import com.jobder.app.authentication.models.RoleName;
+import com.jobder.app.authentication.dto.RegistrationDTO;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +19,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.BodyInserters;
 
 import java.io.*;
 import java.util.*;
@@ -57,8 +52,8 @@ public class OAuthController {
     PasswordEncoder passwordEncoder;
 
     @PostMapping("/check/code/google")
-    public ResponseEntity<?> handleGoogleAuthCode(@RequestBody TokenDTO tokenDTO) throws IOException {
-        String code = tokenDTO.getValue();
+    public ResponseEntity<?> handleGoogleAuthCode(@RequestBody RegistrationDTO registrationDTO) throws IOException {
+        String code = registrationDTO.getValue();
         String clientIdAndSecret = googleClientId + googleClientSecret;
         String authBasic = Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes());
 
@@ -80,30 +75,29 @@ public class OAuthController {
 
         String idToken = (String) responseBody.get("id_token");
 
-        tokenDTO.setValue(idToken);
+        registrationDTO.setValue(idToken);
 
-        return this.google(tokenDTO);
+        return this.google(registrationDTO);
     }
 
-    private ResponseEntity google(TokenDTO tokenDTO) throws IOException {
+    private ResponseEntity google(RegistrationDTO registrationDTO) throws IOException {
         final NetHttpTransport netHttpTransport = new NetHttpTransport();
         final JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
         GoogleIdTokenVerifier.Builder verifier =
                 new GoogleIdTokenVerifier.Builder(netHttpTransport, jsonFactory)
                         .setAudience(Collections.singletonList(googleClientId));
 
-        final GoogleIdToken googleIdToken = GoogleIdToken.parse(verifier.getJsonFactory(), tokenDTO.getValue());
+        final GoogleIdToken googleIdToken = GoogleIdToken.parse(verifier.getJsonFactory(), registrationDTO.getValue());
         final GoogleIdToken.Payload payload = googleIdToken.getPayload();
 
         User usuario = new User();
         if(userService.existsEmail(payload.getEmail()))
             usuario = userService.getByEmail(payload.getEmail()).get();
         else {
-            UserGoogleDTO userGoogleDTO = new UserGoogleDTO();
-            userGoogleDTO.setName((String) payload.getOrDefault("name",""));
-            userGoogleDTO.setPicture((String) payload.getOrDefault("picture",""));
-            userGoogleDTO.setEmail(payload.getEmail());
-            usuario = saveUser(userGoogleDTO);
+            registrationDTO.setName((String) payload.getOrDefault("name",""));
+            registrationDTO.setPicture((String) payload.getOrDefault("picture",""));
+            registrationDTO.setEmail(payload.getEmail());
+            usuario = saveUser(registrationDTO);
         }
 
         JWTokenDTO jwtokenRes = login(usuario);
@@ -116,6 +110,7 @@ public class OAuthController {
 
         String jwt = jwtService.getToken(usuario);
         JWTokenDTO jwTokenDTO = new JWTokenDTO();
+        jwTokenDTO.setRole(usuario.getRole().name());
         jwTokenDTO.setAccessToken(jwt);
 
         return jwTokenDTO;
@@ -132,14 +127,24 @@ public class OAuthController {
         return jwTokenDTO;
     }
 
-    private User saveUser(UserGoogleDTO userGoogleDTO){
+    private User saveUser(RegistrationDTO registrationDTO){
         User usuario = new User();
 
-        usuario.setEmail(userGoogleDTO.getEmail());
-        usuario.setName(userGoogleDTO.getName());
-        usuario.setPicture(userGoogleDTO.getPicture());
+        usuario.setEmail(registrationDTO.getEmail());
+        usuario.setName(registrationDTO.getName());
+        usuario.setPicture(registrationDTO.getPicture());
         usuario.setPassword(passwordEncoder.encode(secretPsw));
-        usuario.setRole(RoleName.CLIENT);
+        usuario.setPhoneNumber(registrationDTO.getPhoneNumber());
+        usuario.setAddress(registrationDTO.getAddress());
+        usuario.setLatitude(registrationDTO.getLatitude());
+        usuario.setLongitude(registrationDTO.getLongitude());
+        usuario.setBirthDate(registrationDTO.getBirthDate());
+
+        usuario.setRole(registrationDTO.getAccountRole());
+
+        if(registrationDTO.getAccountRole().equals("WORKER")){
+            usuario.setWorkSpecialization(registrationDTO.getWorkSpecialization());
+        }
 
         return userService.save(usuario);
     }

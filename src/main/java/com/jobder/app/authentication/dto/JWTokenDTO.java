@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class JWTokenDTO {
     private String accessToken;
+    private String role;
     private String refreshToken;
 }
