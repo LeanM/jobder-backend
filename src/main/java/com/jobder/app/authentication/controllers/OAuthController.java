@@ -9,6 +9,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.jobder.app.authentication.config.JwtService;
 import com.jobder.app.authentication.dto.JWTokenDTO;
 import com.jobder.app.authentication.dto.TokenDTO;
+import com.jobder.app.authentication.dto.UserGoogleDTO;
 import com.jobder.app.authentication.models.RoleName;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.services.UserService;
@@ -77,8 +78,6 @@ public class OAuthController {
         ResponseEntity<Map> response = restTemplate.postForEntity("https://www.googleapis.com/oauth2/v4/token", request, Map.class);
         Map<String, Object> responseBody = response.getBody();
 
-        System.out.println(responseBody);
-
         String idToken = (String) responseBody.get("id_token");
 
         tokenDTO.setValue(idToken);
@@ -96,13 +95,16 @@ public class OAuthController {
         final GoogleIdToken googleIdToken = GoogleIdToken.parse(verifier.getJsonFactory(), tokenDTO.getValue());
         final GoogleIdToken.Payload payload = googleIdToken.getPayload();
 
-        System.out.println(payload);
-
         User usuario = new User();
         if(userService.existsEmail(payload.getEmail()))
             usuario = userService.getByEmail(payload.getEmail()).get();
-        else
-            usuario = saveUser(payload.getEmail());
+        else {
+            UserGoogleDTO userGoogleDTO = new UserGoogleDTO();
+            userGoogleDTO.setName((String) payload.getOrDefault("name",""));
+            userGoogleDTO.setPicture((String) payload.getOrDefault("picture",""));
+            userGoogleDTO.setEmail(payload.getEmail());
+            usuario = saveUser(userGoogleDTO);
+        }
 
         JWTokenDTO jwtokenRes = login(usuario);
 
@@ -130,10 +132,12 @@ public class OAuthController {
         return jwTokenDTO;
     }
 
-    private User saveUser(String email){
+    private User saveUser(UserGoogleDTO userGoogleDTO){
         User usuario = new User();
 
-        usuario.setEmail(email);
+        usuario.setEmail(userGoogleDTO.getEmail());
+        usuario.setName(userGoogleDTO.getName());
+        usuario.setPicture(userGoogleDTO.getPicture());
         usuario.setPassword(passwordEncoder.encode(secretPsw));
         usuario.setRole(RoleName.CLIENT);
 

@@ -20,10 +20,11 @@ import java.util.Set;
 @Document
 public class User implements UserDetails {
     @Id
-    private Long id;
+    private String id;
     private String name;
     private String email;
     private String password;
+    private String picture;
     private RoleName role;
 
     @Override
