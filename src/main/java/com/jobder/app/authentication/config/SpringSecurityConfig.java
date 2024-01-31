@@ -28,7 +28,7 @@ public class SpringSecurityConfig {
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.accessDeniedHandler(accessDeniedHandler).authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests( auth ->
                         auth.requestMatchers("/oauth/**").permitAll()
-                                .requestMatchers("/profile/**").authenticated().requestMatchers("/search/client/**").authenticated().requestMatchers("search/unlogged/**").permitAll().anyRequest().permitAll())
+                                .requestMatchers("/profile/**").authenticated().requestMatchers("/search/client/**").authenticated().requestMatchers("search/unlogged/**").permitAll().requestMatchers("/chatroom/**").authenticated().anyRequest().permitAll())
                 .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
                 .addFilterBefore(corsAllowFilter, UsernamePasswordAuthenticationFilter.class)
