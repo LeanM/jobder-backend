@@ -1,6 +1,7 @@
 package com.jobder.app.search.dto;
 
 
+import com.jobder.app.authentication.dto.WorkerDTO;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,15 +14,7 @@ import java.sql.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WorkerSearchResponse {
-    private String id;
-    @Email
-    private String email;
-    private String name;
-    private String description;
-    private String professionName;
-    private Date birthDate;
-    private Float averageRating;
-    private String picture;
+    private WorkerDTO worker;
     private Double distanceInKm;
     private String secretKey;
 }

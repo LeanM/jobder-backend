@@ -25,12 +25,12 @@ public class WorkerSearchService {
     private final double EarthRadius = 6371000;
     private final double radians = 3.14159/180;
 
-    public List<User> searchWorkers(RequestClientSearchInfo clientSearchInfo) {
+    public List<WorkerSearchResponse> searchWorkers(RequestClientSearchInfo clientSearchInfo) {
         int pageNumber = 0;
         PageRequest pageRequest = PageRequest.of(pageNumber,maxPageWorkers);
 
-        List<User> bestAverageRatingWorkersForUserLocation;
-        List<User> workersFinalResult = new LinkedList<>();
+        List<WorkerSearchResponse> bestAverageRatingWorkersForUserLocation;
+        List<WorkerSearchResponse> workersFinalResult = new LinkedList<>();
 
         User searchingClient = userRepository.findById(clientSearchInfo.getId()).get();
         clientSearchInfo.setLongitude(searchingClient.getLongitude());
@@ -41,7 +41,7 @@ public class WorkerSearchService {
             pageNumber += 1;
             pageRequest = PageRequest.of(pageNumber, maxPageWorkers);
 
-            List<User> availableWorkers = verifyAvailableWorkers(searchingClient, bestAverageRatingWorkersForUserLocation);
+            List<WorkerSearchResponse> availableWorkers = verifyAvailableWorkers(searchingClient, bestAverageRatingWorkersForUserLocation);
 
             for (int i = 0; (i < availableWorkers.size()); i++){
                 workersFinalResult.add(availableWorkers.get(i));
@@ -52,12 +52,12 @@ public class WorkerSearchService {
         return workersFinalResult;
     }
 
-    public List<User> unloggedSearchWorkers(RequestClientSearchInfo clientSearchInfo) {
+    public List<WorkerSearchResponse> unloggedSearchWorkers(RequestClientSearchInfo clientSearchInfo) {
         int pageNumber = 0;
         PageRequest pageRequest = PageRequest.of(pageNumber,maxPageWorkers);
 
-        List<User> bestAverageRatingWorkersForUserLocation;
-        List<User> workersFinalResult = new LinkedList<>();
+        List<WorkerSearchResponse> bestAverageRatingWorkersForUserLocation;
+        List<WorkerSearchResponse> workersFinalResult = new LinkedList<>();
 
         do {
             bestAverageRatingWorkersForUserLocation = obtainBestAverageRatingWorkersForUserInfo(clientSearchInfo, pageRequest);
@@ -73,7 +73,7 @@ public class WorkerSearchService {
         return workersFinalResult;
     }
 
-    private List<User> verifyAvailableWorkers(User searchingClient, List<User> workersToVerify){
+    private List<WorkerSearchResponse> verifyAvailableWorkers(User searchingClient, List<WorkerSearchResponse> workersToVerify){
         return workersToVerify;
     }
 
@@ -86,7 +86,7 @@ public class WorkerSearchService {
         return searchMinimumDistanceInKm;
     }
 
-    private List<User> obtainBestAverageRatingWorkersForUserInfo(RequestClientSearchInfo clientSearchInfo, PageRequest pageRequest){
+    private List<WorkerSearchResponse> obtainBestAverageRatingWorkersForUserInfo(RequestClientSearchInfo clientSearchInfo, PageRequest pageRequest){
         List<User> toReturn;
 
         if(clientSearchInfo.getProfessionName() == "" || clientSearchInfo.getProfessionName() == null)
@@ -94,16 +94,31 @@ public class WorkerSearchService {
         else
             toReturn = userRepository.findCloseWorkersByProfession(clientSearchInfo.getProfessionName(), clientSearchInfo.getLongitude(), clientSearchInfo.getLatitude(), defineMinimumDistanceInKm(clientSearchInfo), pageRequest);
 
-        return toReturn;
+        return filterCloseWorkers(clientSearchInfo, toReturn);
+    }
+
+    private List<WorkerSearchResponse> filterCloseWorkers(RequestClientSearchInfo clientSearchInfo, List<User> workers) {
+        List<WorkerSearchResponse> filteredWorkers = new LinkedList<>();
+        for (User worker : workers){
+            Double distanceBetweenWorkerAndClient = distanceOfWorkerToClientInKm(worker, clientSearchInfo);
+            if(distanceBetweenWorkerAndClient < defaultMinimumDistanceInKm){
+                WorkerSearchResponse workerSearchResponse = new WorkerSearchResponse();
+                workerSearchResponse.setWorker(worker.toWorker());
+                workerSearchResponse.setDistanceInKm(distanceBetweenWorkerAndClient);
+                filteredWorkers.add(workerSearchResponse);
+            }
+        }
+
+        return filteredWorkers;
     }
 
 
-    private double distanceOfWorkerToClientInKm(User worker, User searchingClient){
-        double lngDelta = Math.abs(searchingClient.getLongitude() - worker.getLongitude());
+    private double distanceOfWorkerToClientInKm(User worker, RequestClientSearchInfo clientSearchInfo){
+        double lngDelta = Math.abs(clientSearchInfo.getLongitude() - worker.getLongitude());
         if (lngDelta > 180)
             lngDelta = 360 - lngDelta;
-        double p1 = lngDelta * Math.cos(0.5 * radians * (searchingClient.getLatitude() + worker.getLatitude()));
-        double p2 = (searchingClient.getLatitude() - worker.getLatitude());
+        double p1 = lngDelta * Math.cos(0.5 * radians * (clientSearchInfo.getLatitude() + worker.getLatitude()));
+        double p2 = (clientSearchInfo.getLatitude() - worker.getLatitude());
         return Math.floor( ((EarthRadius * radians * Math.sqrt( p1 * p1 + p2 * p2)) / 1000) * 100 ) / 100;
     }
 

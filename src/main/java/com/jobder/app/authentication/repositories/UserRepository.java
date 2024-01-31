@@ -16,11 +16,14 @@ public interface UserRepository extends MongoRepository<User, String> {
     String HAVERSINE_FORMULA = "(6371 * acos(cos(radians(:latitude)) * cos(radians(w.latitude)) *" +
             " cos(radians(w.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(w.latitude))))";
 
-    @Query("SELECT w FROM User w WHERE w.role = WORKER AND " + HAVERSINE_FORMULA + " < :mindistance ORDER BY w.averageRating DESC")
+
+    //@Query("SELECT w FROM User w WHERE w.role = WORKER AND " + HAVERSINE_FORMULA + " < :mindistance ORDER BY w.averageRating DESC")
+    @Query("{ 'role' : 'WORKER' }")
     List<User> findCloseWorkers(@Param("longitude") Double clientLongitude, @Param("latitude") Double clientLatitude, @Param("mindistance") int minimumDistanceInKm, Pageable pageable);
 
 
-    @Query("SELECT w FROM User w WHERE w.role = WORKER AND " + HAVERSINE_FORMULA + " < :mindistance AND w.workSpecialization = :profession ORDER BY w.averageRating DESC")
+    //@Query("SELECT w FROM User w WHERE w.role = WORKER AND " + HAVERSINE_FORMULA + " < :mindistance AND w.workSpecialization = :profession ORDER BY w.averageRating DESC")
+    @Query("{ 'role' : 'WORKER', 'workSpecialization' : ?0 }")
     List<User> findCloseWorkersByProfession(@Param("profession") String profession, @Param("longitude") Double clientLongitude, @Param("latitude") Double clientLatitude, @Param("mindistance") int minimumDistanceInKm, Pageable pageable);
 }
 
