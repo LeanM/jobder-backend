@@ -22,4 +22,5 @@ public class WorkerDTO {
     private String longitude;
     private Date birthDate;
     private String workSpecialization;
+    private String availabilityStatus;
 }
