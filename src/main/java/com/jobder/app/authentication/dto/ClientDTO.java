@@ -16,7 +16,7 @@ public class ClientDTO {
     private String picture;
     private String phoneNumber;
     private String address;
-    private String latitude;
-    private String longitude;
+    private Double latitude;
+    private Double longitude;
     private Date birthDate;
 }

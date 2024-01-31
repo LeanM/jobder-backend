@@ -18,12 +18,13 @@ public class WorkerDTO {
     private String picture;
     private String phoneNumber;
     private String address;
-    private String latitude;
-    private String longitude;
+    private Double latitude;
+    private Double longitude;
     private Date birthDate;
     private String workSpecialization;
     private String availabilityStatus;
     private String description;
     private String workingHours;
     private String averageRating;
+    private Integer worksFinished;
 }

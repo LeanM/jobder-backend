@@ -22,8 +22,8 @@ public class RegistrationDTO {
     private String email;
     private String phoneNumber;
     private String address;
-    private String latitude;
-    private String longitude;
+    private Double latitude;
+    private Double longitude;
     private Date birthDate;
 
     //Worker

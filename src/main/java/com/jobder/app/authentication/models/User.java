@@ -29,8 +29,8 @@ public class User implements UserDetails {
     //Common client and worker
     private String phoneNumber;
     private String address;
-    private String latitude;
-    private String longitude;
+    private Double latitude;
+    private Double longitude;
     private Date birthDate;
 
     //Worker
@@ -39,6 +39,7 @@ public class User implements UserDetails {
     private String description;
     private String workingHours;
     private String averageRating;
+    private Integer worksFinished;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -71,7 +72,7 @@ public class User implements UserDetails {
     }
 
     public WorkerDTO toWorker(){
-        WorkerDTO toReturn = new WorkerDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating);
+        WorkerDTO toReturn = new WorkerDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating, this.worksFinished);
 
         return toReturn;
     }
