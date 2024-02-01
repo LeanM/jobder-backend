@@ -13,11 +13,11 @@ import java.util.Date;
 @NoArgsConstructor
 public class RegistrationDTO {
     private RoleName accountRole;
-    @NonNull
     private String value;
 
     //Common client and worker
     private String name;
+    private String password;
     private String picture;
     private String email;
     private String phoneNumber;

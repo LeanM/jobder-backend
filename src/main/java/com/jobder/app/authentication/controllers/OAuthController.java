@@ -9,6 +9,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.jobder.app.authentication.config.JwtService;
 import com.jobder.app.authentication.dto.JWTokenDTO;
 import com.jobder.app.authentication.dto.RegistrationDTO;
+import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.models.AvailabilityStatus;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.services.UserService;
@@ -117,11 +118,16 @@ public class OAuthController {
         return jwTokenDTO;
     }
 
-    private JWTokenDTO loginWithCredentials(User usuario){
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usuario.getUsername(), usuario.getPassword()));
-        UserDetails user = userService.findByEmail(usuario.getEmail()).orElseThrow();
+    @PostMapping("/register/client/credentials")
+    public JWTokenDTO registerWithCredentials(RegistrationDTO usuario) throws InvalidAuthException {
+        //authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usuario.getUsername(), usuario.getPassword()));
+        if(userService.findByEmail(usuario.getEmail()).isPresent()){
+            throw new InvalidAuthException("Email already exists!");
+        }
 
-        String jwt = jwtService.getToken(user);
+        User savedUser = userService.registerClient(usuario);
+
+        String jwt = jwtService.getToken(savedUser);
         JWTokenDTO jwTokenDTO = new JWTokenDTO();
         jwTokenDTO.setAccessToken(jwt);
 

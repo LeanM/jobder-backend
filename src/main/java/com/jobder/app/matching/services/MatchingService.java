@@ -6,6 +6,7 @@ import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.chat.chatroom.ChatRoom;
 import com.jobder.app.chat.chatroom.ChatRoomService;
+import com.jobder.app.chat.exceptions.ChatRoomException;
 import com.jobder.app.matching.dto.InteractionRequest;
 import com.jobder.app.matching.dto.MatchRequest;
 import com.jobder.app.matching.dto.ClientMatchesReponseDTO;
@@ -78,6 +79,8 @@ public class MatchingService {
             actualInteraction.setInteractionState(InteractionState.OPEN);
             actualInteraction.setInteractionType(InteractionType.MATCH);
             actualInteraction.setCreatedAt(new Date());
+
+
         }
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
     }
@@ -88,7 +91,7 @@ public class MatchingService {
             throw new InvalidInteractionException("No previous valid interaction between client and worker!");
     }
 
-    public void rejectClient(MatchRequest rejectClientRequest) throws InvalidInteractionException {
+    public void rejectClient(MatchRequest rejectClientRequest) throws InvalidInteractionException, ChatRoomException {
         if(userRepository.existsById(rejectClientRequest.getClientId()) && userRepository.existsById(rejectClientRequest.getWorkerId())){
 
             Interaction interaction = interactionRepository.findInteractionByWorkerAndClient(rejectClientRequest.getWorkerId(), rejectClientRequest.getClientId());
@@ -97,11 +100,13 @@ public class MatchingService {
 
             interaction.setInteractionType(InteractionType.WORKER_REJECT);
             interactionRepository.save(interaction);
+
+            chatRoomService.deleteChatRooms(rejectClientRequest.getClientId(), rejectClientRequest.getWorkerId());
         }
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
     }
 
-    public void cancelMatch(MatchRequest cancelMatchRequest) throws InvalidInteractionException{
+    public void cancelMatch(MatchRequest cancelMatchRequest) throws InvalidInteractionException, ChatRoomException {
         if(userRepository.existsById(cancelMatchRequest.getClientId()) && userRepository.existsById(cancelMatchRequest.getWorkerId())){
             Interaction match = interactionRepository.findInteractionByWorkerAndClient(cancelMatchRequest.getWorkerId(), cancelMatchRequest.getClientId());
             if(match == null || !match.getInteractionType().name().equals("MATCH"))
@@ -109,6 +114,8 @@ public class MatchingService {
             match.setClosedAt(new Date());
             match.setInteractionState(InteractionState.CLOSED);
             interactionRepository.save(match);
+
+            chatRoomService.deleteChatRooms(cancelMatchRequest.getClientId(), cancelMatchRequest.getWorkerId());
         }
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
     }
