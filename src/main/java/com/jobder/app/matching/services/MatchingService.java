@@ -137,7 +137,7 @@ public class MatchingService {
                 clientMatchesReponseDTO.setChatRoom(chatRoomBetweenBoth);
             }
             clientMatchesReponseDTO.setInteraction(interaction);
-            clientMatchesReponseDTO.setWorker(userRepository.findById(interaction.getWorkerId()).get().toWorker());
+            clientMatchesReponseDTO.setUser(userRepository.findById(interaction.getWorkerId()).get().toWorker());
 
             toReturn.add(clientMatchesReponseDTO);
         }
@@ -167,7 +167,7 @@ public class MatchingService {
                 workerMatchesResponseDTO.setChatRoom(chatRoomBetweenBoth);
             }
             workerMatchesResponseDTO.setInteraction(interaction);
-            workerMatchesResponseDTO.setClient(userRepository.findById(interaction.getClientId()).get().toClient());
+            workerMatchesResponseDTO.setUser(userRepository.findById(interaction.getClientId()).get().toClient());
 
             toReturn.add(workerMatchesResponseDTO);
         }

@@ -14,5 +14,5 @@ import lombok.NoArgsConstructor;
 public class ClientMatchesReponseDTO {
     private ChatRoom chatRoom;
     private Interaction interaction;
-    private WorkerDTO worker;
+    private WorkerDTO user;
 }
