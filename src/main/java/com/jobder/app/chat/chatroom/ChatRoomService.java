@@ -74,7 +74,7 @@ public class ChatRoomService {
     public void setUnseenChatRoomOnMessage(String senderId, String recipientId){
         //Busco el chatroom del usuario que recibe el mensaje
         Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(recipientId,senderId);
-        chatRoom.ifPresent(chatRoom1 -> {chatRoom1.setState(ChatRoomState.UNSEEN);chatRoomRepository.save(chatRoom1);});
+        chatRoom.ifPresent(chatRoom1 -> {if(!chatRoom1.getState().name().equals("NEW")){chatRoom1.setState(ChatRoomState.UNSEEN);chatRoomRepository.save(chatRoom1);}});
     }
 
     public void setSeenChatRoomOnOpenChat(String openerId, String recipientId){

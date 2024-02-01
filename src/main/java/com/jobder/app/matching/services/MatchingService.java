@@ -39,6 +39,7 @@ public class MatchingService {
             interaction.setWorkerId(interactionRequest.getWorkerId());
             interaction.setClientId(interactionRequest.getClientId());
             interaction.setInteractionType(interactionRequest.getInteractionType());
+            interaction.setCreatedAt(new Date());
 
             if(interactionRequest.getClientProblemDescription() != null)
                 interaction.setClientProblemDescription(interactionRequest.getClientProblemDescription());
