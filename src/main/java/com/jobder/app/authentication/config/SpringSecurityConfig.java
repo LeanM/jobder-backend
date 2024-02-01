@@ -3,6 +3,7 @@ package com.jobder.app.authentication.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,6 +26,7 @@ public class SpringSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws  Exception {
         return http
                 .csrf(csrf -> csrf.disable())
+                //.cors(cors -> cors.disable())
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.accessDeniedHandler(accessDeniedHandler).authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests( auth ->
                         auth.requestMatchers("/oauth/**").permitAll()
@@ -33,6 +35,7 @@ public class SpringSecurityConfig {
                                 .requestMatchers("search/unlogged/**").permitAll()
                                 .requestMatchers("/chatroom/**").authenticated()
                                 .requestMatchers("/matching/**").authenticated()
+                                .requestMatchers("/chat/messages/**").authenticated()
                                 .anyRequest().permitAll())
                 .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)

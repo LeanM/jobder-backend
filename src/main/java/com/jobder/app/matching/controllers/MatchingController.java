@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.LinkedList;
 import java.util.List;
 
-@CrossOrigin(origins = "*")
 @RestController
+@CrossOrigin("*")
 @RequestMapping( path = "matching" )
 @RequiredArgsConstructor
 public class MatchingController {

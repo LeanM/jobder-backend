@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 
-@CrossOrigin(origins = "*")
 @RestController
+@CrossOrigin("*")
 @RequestMapping ( path = "search" )
 @RequiredArgsConstructor
 public class WorkerSearchController {

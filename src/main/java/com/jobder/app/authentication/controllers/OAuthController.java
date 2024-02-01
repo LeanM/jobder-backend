@@ -27,7 +27,7 @@ import java.io.*;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin("*")
 @RequestMapping(path = "/oauth")
 @RequiredArgsConstructor
 public class OAuthController {
