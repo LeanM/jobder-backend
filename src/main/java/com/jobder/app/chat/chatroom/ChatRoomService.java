@@ -66,6 +66,11 @@ public class ChatRoomService {
         return chatRoomRepository.findBySenderId(userId);
     }
 
+    public ChatRoom getUserChatRoomWithOtherUser(String userId, String otherUserId) {
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(userId, otherUserId);
+        return chatRoom.orElse(null);
+    }
+
     public void setUnseenChatRoomOnMessage(String senderId, String recipientId){
         //Busco el chatroom del usuario que recibe el mensaje
         Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(recipientId,senderId);

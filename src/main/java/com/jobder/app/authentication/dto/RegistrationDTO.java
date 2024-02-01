@@ -28,4 +28,6 @@ public class RegistrationDTO {
 
     //Worker
     private String workSpecialization;
+    private String description;
+    private String workingHours;
 }

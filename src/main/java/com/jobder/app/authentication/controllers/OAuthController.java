@@ -9,6 +9,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.jobder.app.authentication.config.JwtService;
 import com.jobder.app.authentication.dto.JWTokenDTO;
 import com.jobder.app.authentication.dto.RegistrationDTO;
+import com.jobder.app.authentication.models.AvailabilityStatus;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -142,8 +143,11 @@ public class OAuthController {
 
         usuario.setRole(registrationDTO.getAccountRole());
 
-        if(registrationDTO.getAccountRole().equals("WORKER")){
+        if(registrationDTO.getAccountRole().name().equals("WORKER")){
             usuario.setWorkSpecialization(registrationDTO.getWorkSpecialization());
+            usuario.setAvailabilityStatus(AvailabilityStatus.MODERATED);
+            usuario.setAverageRating(1f);
+            usuario.setWorksFinished(0);
         }
 
         return userService.save(usuario);

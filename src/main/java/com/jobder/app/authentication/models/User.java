@@ -35,10 +35,10 @@ public class User implements UserDetails {
 
     //Worker
     private String workSpecialization;
-    private String availabilityStatus;
+    private AvailabilityStatus availabilityStatus;
     private String description;
     private String workingHours;
-    private String averageRating;
+    private Float averageRating;
     private Integer worksFinished;
 
     @Override

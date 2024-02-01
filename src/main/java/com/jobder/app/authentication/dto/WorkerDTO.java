@@ -1,5 +1,6 @@
 package com.jobder.app.authentication.dto;
 
+import com.jobder.app.authentication.models.AvailabilityStatus;
 import com.jobder.app.authentication.models.RoleName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,9 +23,9 @@ public class WorkerDTO {
     private Double longitude;
     private Date birthDate;
     private String workSpecialization;
-    private String availabilityStatus;
+    private AvailabilityStatus availabilityStatus;
     private String description;
     private String workingHours;
-    private String averageRating;
+    private Float averageRating;
     private Integer worksFinished;
 }

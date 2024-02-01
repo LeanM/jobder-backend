@@ -1,6 +1,7 @@
 package com.jobder.app.chat.dto;
 
 import com.jobder.app.authentication.models.User;
+import com.jobder.app.chat.chatroom.ChatRoomState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatRoomUserResponseDTO {
-    private String chatRoomState;
+    private ChatRoomState chatRoomState;
     private User user;
 }
