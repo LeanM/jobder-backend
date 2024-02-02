@@ -3,6 +3,7 @@ package com.jobder.app.matching.controllers;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.User;
+import com.jobder.app.chat.exceptions.ChatRoomException;
 import com.jobder.app.matching.dto.ClientMatchesReponseDTO;
 import com.jobder.app.matching.dto.InteractionRequest;
 import com.jobder.app.matching.dto.MatchRequest;
@@ -70,7 +71,7 @@ public class MatchingController {
             matchingService.rejectClient(rejectClientRequest);
             response = new ResponseEntity<>("Client rejected!", headers, HttpStatus.OK);
         }
-        catch(InvalidInteractionException e){
+        catch(InvalidInteractionException | ChatRoomException e){
             response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
         }
 
@@ -87,7 +88,7 @@ public class MatchingController {
             matchingService.cancelMatch(cancelMatchRequest);
             response = new ResponseEntity<>("Canceled Match!", headers, HttpStatus.OK);
         }
-        catch(InvalidInteractionException e){
+        catch(InvalidInteractionException | ChatRoomException e){
             response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
         }
 
@@ -104,7 +105,7 @@ public class MatchingController {
             matchingService.cancelMatch(cancelMatchRequest);
             response = new ResponseEntity<>("Canceled Match!", headers, HttpStatus.OK);
         }
-        catch(InvalidInteractionException e){
+        catch(InvalidInteractionException | ChatRoomException e){
             response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
         }
 
