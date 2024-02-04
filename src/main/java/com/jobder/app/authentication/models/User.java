@@ -1,7 +1,8 @@
 package com.jobder.app.authentication.models;
 
-import com.jobder.app.authentication.dto.ClientDTO;
-import com.jobder.app.authentication.dto.WorkerDTO;
+import com.jobder.app.authentication.dto.userdtos.ClientDTO;
+import com.jobder.app.authentication.dto.userdtos.CommonDataDTO;
+import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -75,13 +76,15 @@ public class User implements UserDetails {
     }
 
     public WorkerDTO toWorker(){
-        WorkerDTO toReturn = new WorkerDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating, this.worksFinished);
+        CommonDataDTO commonDataDTO = new CommonDataDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate);
+        WorkerDTO toReturn = new WorkerDTO(commonDataDTO,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating, this.worksFinished);
 
         return toReturn;
     }
 
     public ClientDTO toClient(){
-        ClientDTO toReturn = new ClientDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate,this.searchParameters);
+        CommonDataDTO commonDataDTO = new CommonDataDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate);
+        ClientDTO toReturn = new ClientDTO(commonDataDTO, this.searchParameters);
 
         return toReturn;
     }

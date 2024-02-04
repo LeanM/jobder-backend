@@ -1,6 +1,5 @@
 package com.jobder.app.search.services;
 
-import com.jobder.app.authentication.dto.WorkerDTO;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.SearchParameters;
 import com.jobder.app.authentication.models.User;
@@ -10,12 +9,9 @@ import com.jobder.app.search.dto.WorkerSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

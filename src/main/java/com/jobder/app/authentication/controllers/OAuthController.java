@@ -115,6 +115,12 @@ public class OAuthController {
         jwTokenDTO.setRole(usuario.getRole().name());
         jwTokenDTO.setAccessToken(jwt);
 
+        if(usuario.getRole().name().equals("CLIENT")){
+            jwTokenDTO.setUserData(usuario.toClient());
+        } else if (usuario.getRole().name().equals("WORKER")) {
+            jwTokenDTO.setUserData(usuario.toWorker());
+        }
+
         return jwTokenDTO;
     }
 

@@ -1,6 +1,5 @@
-package com.jobder.app.authentication.dto;
+package com.jobder.app.authentication.dto.userdtos;
 
-import com.jobder.app.authentication.models.SearchParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +9,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientDTO {
+public class CommonDataDTO {
     private String id;
     private String name;
     private String email;
@@ -20,5 +19,4 @@ public class ClientDTO {
     private Double latitude;
     private Double longitude;
     private Date birthDate;
-    private SearchParameters searchParameters;
 }
