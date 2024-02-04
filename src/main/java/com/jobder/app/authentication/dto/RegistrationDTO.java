@@ -1,6 +1,7 @@
 package com.jobder.app.authentication.dto;
 
 import com.jobder.app.authentication.models.RoleName;
+import com.jobder.app.authentication.models.SearchParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,4 +31,7 @@ public class RegistrationDTO {
     private String workSpecialization;
     private String description;
     private String workingHours;
+
+    //Client
+    private SearchParameters searchParameters;
 }

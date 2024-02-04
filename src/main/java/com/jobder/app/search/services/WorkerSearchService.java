@@ -1,6 +1,8 @@
 package com.jobder.app.search.services;
 
 import com.jobder.app.authentication.dto.WorkerDTO;
+import com.jobder.app.authentication.exceptions.InvalidClientException;
+import com.jobder.app.authentication.models.SearchParameters;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.search.dto.RequestClientSearchInfo;
@@ -25,14 +27,16 @@ public class WorkerSearchService {
     private final double EarthRadius = 6371000;
     private final double radians = 3.14159/180;
 
-    public List<WorkerSearchResponse> searchWorkers(RequestClientSearchInfo clientSearchInfo) {
+    public List<WorkerSearchResponse> searchWorkers(RequestClientSearchInfo clientSearchInfo) throws InvalidClientException {
+        updateUserSearchParameters(clientSearchInfo);
+
         int pageNumber = 0;
         PageRequest pageRequest = PageRequest.of(pageNumber,maxPageWorkers);
 
         List<WorkerSearchResponse> bestAverageRatingWorkersForUserLocation;
         List<WorkerSearchResponse> workersFinalResult = new LinkedList<>();
 
-        User searchingClient = userRepository.findById(clientSearchInfo.getId()).get();
+        User searchingClient = userRepository.findById(clientSearchInfo.getId()).orElseThrow(() -> new InvalidClientException("No Client with that ID"));
         clientSearchInfo.setLongitude(searchingClient.getLongitude());
         clientSearchInfo.setLatitude(searchingClient.getLatitude());
 
@@ -50,6 +54,15 @@ public class WorkerSearchService {
 
 
         return workersFinalResult;
+    }
+
+    private void updateUserSearchParameters(RequestClientSearchInfo clientSearchInfo) throws InvalidClientException {
+        if(userRepository.existsById(clientSearchInfo.getId())){
+            User client = userRepository.findById(clientSearchInfo.getId()).orElseThrow(() -> new InvalidClientException("No Client with that ID"));
+            SearchParameters updatedSearchParameters = new SearchParameters(clientSearchInfo.getClientProblemDescription(), clientSearchInfo.getWorkSpecialization(), clientSearchInfo.getAvailabilityStatus());
+            client.setSearchParameters(updatedSearchParameters);
+            userRepository.save(client);
+        } else throw new InvalidClientException("No Client with that ID");
     }
 
     public List<WorkerSearchResponse> unloggedSearchWorkers(RequestClientSearchInfo clientSearchInfo) {
@@ -89,10 +102,10 @@ public class WorkerSearchService {
     private List<WorkerSearchResponse> obtainBestAverageRatingWorkersForUserInfo(RequestClientSearchInfo clientSearchInfo, PageRequest pageRequest){
         List<User> toReturn;
 
-        if(clientSearchInfo.getProfessionName() == "" || clientSearchInfo.getProfessionName() == null)
+        if(clientSearchInfo.getWorkSpecialization() == "" || clientSearchInfo.getWorkSpecialization() == null)
             toReturn = userRepository.findCloseWorkers(clientSearchInfo.getLongitude(), clientSearchInfo.getLatitude(), defineMinimumDistanceInKm(clientSearchInfo), pageRequest);
         else
-            toReturn = userRepository.findCloseWorkersByProfession(clientSearchInfo.getProfessionName(), clientSearchInfo.getLongitude(), clientSearchInfo.getLatitude(), defineMinimumDistanceInKm(clientSearchInfo), pageRequest);
+            toReturn = userRepository.findCloseWorkersByProfession(clientSearchInfo.getWorkSpecialization(), clientSearchInfo.getLongitude(), clientSearchInfo.getLatitude(), defineMinimumDistanceInKm(clientSearchInfo), pageRequest);
 
         return filterCloseWorkers(clientSearchInfo, toReturn);
     }

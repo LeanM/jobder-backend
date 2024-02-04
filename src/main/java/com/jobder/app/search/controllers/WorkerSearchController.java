@@ -1,5 +1,6 @@
 package com.jobder.app.search.controllers;
 
+import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.search.dto.RequestClientSearchInfo;
 import com.jobder.app.search.dto.WorkerSearchResponse;
@@ -23,15 +24,19 @@ public class WorkerSearchController {
     private final WorkerSearchService workerSearchService;
 
     @PostMapping (path = "/client/searchWorkers")
-    public ResponseEntity<List<WorkerSearchResponse>> searchWorkers(@RequestBody RequestClientSearchInfo clientSearchInfo, @AuthenticationPrincipal User clientSearching){
-        ResponseEntity<List<WorkerSearchResponse>> response;
+    public ResponseEntity<?> searchWorkers(@RequestBody RequestClientSearchInfo clientSearchInfo, @AuthenticationPrincipal User clientSearching){
+        ResponseEntity<?> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
 
-        clientSearchInfo.setId(clientSearching.getId());
-        List<WorkerSearchResponse> toReturn = workerSearchService.searchWorkers(clientSearchInfo);
-
-        response = new ResponseEntity<>(toReturn,headers,HttpStatus.OK);
+        try {
+            clientSearchInfo.setId(clientSearching.getId());
+            List<WorkerSearchResponse> toReturn = workerSearchService.searchWorkers(clientSearchInfo);
+            response = new ResponseEntity<>(toReturn,headers,HttpStatus.OK);
+        }
+        catch(InvalidClientException e){
+            response = new ResponseEntity<String>(e.getMessage(), headers, 404);
+        }
 
         return response;
     }

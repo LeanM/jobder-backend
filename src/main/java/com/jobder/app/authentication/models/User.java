@@ -4,6 +4,7 @@ import com.jobder.app.authentication.dto.ClientDTO;
 import com.jobder.app.authentication.dto.WorkerDTO;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,12 +22,11 @@ public class User implements UserDetails {
     @Id
     private String id;
     private String name;
+    @Indexed(unique = true)
     private String email;
     private String password;
     private String picture;
     private RoleName role;
-
-    //Common client and worker
     private String phoneNumber;
     private String address;
     private Double latitude;
@@ -40,6 +40,9 @@ public class User implements UserDetails {
     private String workingHours;
     private Float averageRating;
     private Integer worksFinished;
+
+    //Client
+    private SearchParameters searchParameters;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -78,7 +81,7 @@ public class User implements UserDetails {
     }
 
     public ClientDTO toClient(){
-        ClientDTO toReturn = new ClientDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate);
+        ClientDTO toReturn = new ClientDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate,this.searchParameters);
 
         return toReturn;
     }

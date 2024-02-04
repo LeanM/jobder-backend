@@ -154,6 +154,10 @@ public class OAuthController {
             usuario.setAvailabilityStatus(AvailabilityStatus.MODERATED);
             usuario.setAverageRating(1f);
             usuario.setWorksFinished(0);
+        } else if (registrationDTO.getAccountRole().name().equals("CLIENT")) {
+            if(registrationDTO.getSearchParameters() != null){
+                usuario.setSearchParameters(registrationDTO.getSearchParameters());
+            }
         }
 
         return userService.save(usuario);
