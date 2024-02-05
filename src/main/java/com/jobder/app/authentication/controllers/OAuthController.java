@@ -8,6 +8,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.jobder.app.authentication.config.JwtService;
 import com.jobder.app.authentication.dto.JWTokenDTO;
+import com.jobder.app.authentication.dto.RefreshDTO;
 import com.jobder.app.authentication.dto.RegistrationDTO;
 import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.models.AvailabilityStatus;
@@ -20,6 +21,7 @@ import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -111,9 +113,11 @@ public class OAuthController {
         //No necesito autenticar por que es logueo con google
 
         String jwt = jwtService.getToken(usuario);
+        String refresh = jwtService.getRefresh(usuario);
         JWTokenDTO jwTokenDTO = new JWTokenDTO();
         jwTokenDTO.setRole(usuario.getRole().name());
         jwTokenDTO.setAccessToken(jwt);
+        jwTokenDTO.setRefreshToken(refresh);
 
         if(usuario.getRole().name().equals("CLIENT")){
             jwTokenDTO.setUserData(usuario.toClient());
@@ -122,6 +126,39 @@ public class OAuthController {
         }
 
         return jwTokenDTO;
+    }
+
+    @PostMapping("/refreshToken")
+    public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshDTO refreshDTO) throws InvalidAuthException {
+        ResponseEntity<?> response;
+        HttpStatus httpStatus = HttpStatus.OK;
+
+        try{
+            if(!jwtService.isTokenValid(refreshDTO.getRefreshToken())) {
+                httpStatus = HttpStatus.BAD_REQUEST;
+                throw new InvalidAuthException("Invalid Refresh token!");
+            }
+
+            if(jwtService.isTokenExpired(refreshDTO.getRefreshToken())) {
+                httpStatus = HttpStatus.CONFLICT;
+                throw new InvalidAuthException("Expired Refresh token!");
+            }
+
+            String userEmail = jwtService.getUsernameFromToken(refreshDTO.getRefreshToken());
+            User user = userService.findByEmail(userEmail).orElseThrow(()-> new InvalidAuthException("Invalid refresh Token!"));
+
+            String jwtToken = jwtService.getToken(user);
+
+            JWTokenDTO jwTokenDTO = new JWTokenDTO();
+            jwTokenDTO.setAccessToken(jwtToken);
+
+            response = new ResponseEntity<>(jwTokenDTO, null, httpStatus);
+        }
+        catch (InvalidAuthException e){
+            response = new ResponseEntity<>(e.getMessage(), null , httpStatus);
+        }
+
+        return response;
     }
 
     @PostMapping("/register/client/credentials")
@@ -134,8 +171,11 @@ public class OAuthController {
         User savedUser = userService.registerClient(usuario);
 
         String jwt = jwtService.getToken(savedUser);
+        String refresh = jwtService.getRefresh(savedUser);
         JWTokenDTO jwTokenDTO = new JWTokenDTO();
         jwTokenDTO.setAccessToken(jwt);
+        jwTokenDTO.setRefreshToken(refresh);
+        jwTokenDTO.setRole(savedUser.getRole().name());
 
         return jwTokenDTO;
     }

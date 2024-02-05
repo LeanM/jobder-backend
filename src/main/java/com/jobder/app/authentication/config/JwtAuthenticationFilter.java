@@ -1,5 +1,6 @@
 package com.jobder.app.authentication.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +18,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -35,14 +41,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!jwtService.isTokenValid(token))
+        if (!jwtService.isTokenValid(token) || jwtService.isTokenExpired(token))
         {
-            try{
-                filterChain.doFilter(request, response);
-            }
-            catch(Exception e){
-                response.sendError(401,"Invalid or Expired Token!");
-            }
+            response.setContentType(APPLICATION_JSON_VALUE);
+            response.setStatus(401);
+            Map<String, String> map = new HashMap<>();
+            map.put("Error", "Invalid or expired token!");
+            new ObjectMapper().writeValue(response.getOutputStream(), map);
 
             return;
         }
