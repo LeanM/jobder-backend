@@ -67,7 +67,7 @@ public class JobderApplication {
 				}
 			}
 			if(!userRepository.existsByEmail("prueba@example.com"))
-				userRepository.save(new User("6", "Isabel Lopez", "prueba@example.com", "asdasd", "profile6.jpg", RoleName.CLIENT, "7777890123",
+				userRepository.save(new User("123", "Isabel Lopez", "prueba@example.com", "asdasd", "profile6.jpg", RoleName.CLIENT, "7777890123",
 					"123 Cedar St", -38.8562944, -60.0670208, new Date(), null, null,
 					null, null, null, null, new SearchParameters("enchufe", "Electricista", AvailabilityStatus.AVAILABLE)));
 
