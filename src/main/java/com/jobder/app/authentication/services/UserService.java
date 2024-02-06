@@ -1,6 +1,7 @@
 package com.jobder.app.authentication.services;
 
 import com.jobder.app.authentication.dto.RegistrationDTO;
+import com.jobder.app.authentication.dto.userdtos.LoginDTO;
 import com.jobder.app.authentication.dto.userdtos.UserDTO;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.RoleName;

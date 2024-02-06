@@ -10,21 +10,26 @@ import com.jobder.app.authentication.config.JwtService;
 import com.jobder.app.authentication.dto.JWTokenDTO;
 import com.jobder.app.authentication.dto.RefreshDTO;
 import com.jobder.app.authentication.dto.RegistrationDTO;
+import com.jobder.app.authentication.dto.userdtos.LoginDTO;
 import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.models.AvailabilityStatus;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.services.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.WebUtils;
 
 import java.io.*;
 import java.util.*;
@@ -56,7 +61,7 @@ public class OAuthController {
     PasswordEncoder passwordEncoder;
 
     @PostMapping("/check/code/google")
-    public ResponseEntity<?> handleGoogleAuthCode(@RequestBody RegistrationDTO registrationDTO) throws IOException {
+    public ResponseEntity<?> handleGoogleAuthCode(@RequestBody RegistrationDTO registrationDTO, HttpServletResponse authResponse) throws IOException {
         String code = registrationDTO.getValue();
         String clientIdAndSecret = googleClientId + googleClientSecret;
         String authBasic = Base64.getEncoder().encodeToString(clientIdAndSecret.getBytes());
@@ -81,10 +86,26 @@ public class OAuthController {
 
         registrationDTO.setValue(idToken);
 
-        return this.google(registrationDTO);
+        JWTokenDTO loginInfo = this.google(registrationDTO);
+
+        setRefreshCookieToResponse(loginInfo.getRefreshToken(), authResponse);
+
+        return new ResponseEntity<>(loginInfo,HttpStatus.OK);
     }
 
-    private ResponseEntity google(RegistrationDTO registrationDTO) throws IOException {
+    private void setRefreshCookieToResponse(String refreshToken, HttpServletResponse authResponse){
+        Cookie refreshCookie = new Cookie("refresh_token",refreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false);
+        refreshCookie.setDomain("localhost");
+        refreshCookie.setAttribute("SameSite", "None");
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(3600 * 24 * 30);
+
+        authResponse.addCookie(refreshCookie);
+    }
+
+    private JWTokenDTO google(RegistrationDTO registrationDTO) throws IOException {
         final NetHttpTransport netHttpTransport = new NetHttpTransport();
         final JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
         GoogleIdTokenVerifier.Builder verifier =
@@ -104,9 +125,7 @@ public class OAuthController {
             usuario = saveUser(registrationDTO);
         }
 
-        JWTokenDTO jwtokenRes = login(usuario);
-
-        return new ResponseEntity(jwtokenRes, HttpStatus.OK);
+        return login(usuario);
     }
 
     private JWTokenDTO login(User usuario){
@@ -123,6 +142,7 @@ public class OAuthController {
         return jwTokenDTO;
     }
 
+    /*
     @PostMapping("/refreshToken")
     public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshDTO refreshDTO) {
         ResponseEntity<?> response;
@@ -158,8 +178,45 @@ public class OAuthController {
         return response;
     }
 
+     */
+
+    @RequestMapping("/refreshToken")
+    public ResponseEntity<?> refreshAccessTokenCookie(@CookieValue(name = "refresh_token") String refreshToken) {
+        ResponseEntity<?> response;
+        HttpStatus httpStatus = HttpStatus.OK;
+
+        try{
+            if(!jwtService.isRefreshTokenValid(refreshToken)) {
+                httpStatus = HttpStatus.UNAUTHORIZED;
+                throw new InvalidAuthException("Invalid Refresh token!");
+            }
+
+            if(jwtService.isTokenExpired(refreshToken)) {
+                httpStatus = HttpStatus.UNAUTHORIZED;
+                throw new InvalidAuthException("Expired Refresh token!");
+            }
+
+            String userEmail = jwtService.getUsernameFromToken(refreshToken);
+            User user = userService.findByEmail(userEmail).orElseThrow(()-> new InvalidAuthException("Invalid refresh Token!"));
+
+            String jwtToken = jwtService.getToken(user);
+
+            JWTokenDTO jwTokenDTO = new JWTokenDTO();
+            jwTokenDTO.setAccessToken(jwtToken);
+            jwTokenDTO.setUserId(user.getId());
+            jwTokenDTO.setRole(user.getRole().name());
+
+            response = new ResponseEntity<>(jwTokenDTO, null, httpStatus);
+        }
+        catch (InvalidAuthException e){
+            response = new ResponseEntity<>(e.getMessage(), null , httpStatus);
+        }
+
+        return response;
+    }
+
     @PostMapping("/register/client/credentials")
-    public JWTokenDTO registerWithCredentials(RegistrationDTO usuario) throws InvalidAuthException {
+    public JWTokenDTO registerWithCredentials(RegistrationDTO usuario, HttpServletResponse httpServletResponse) throws InvalidAuthException {
         //authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usuario.getUsername(), usuario.getPassword()));
         if(userService.findByEmail(usuario.getEmail()).isPresent()){
             throw new InvalidAuthException("Email already exists!");
@@ -167,14 +224,36 @@ public class OAuthController {
 
         User savedUser = userService.registerClient(usuario);
 
-        String jwt = jwtService.getToken(savedUser);
-        String refresh = jwtService.getRefresh(savedUser);
-        JWTokenDTO jwTokenDTO = new JWTokenDTO();
-        jwTokenDTO.setAccessToken(jwt);
-        jwTokenDTO.setRefreshToken(refresh);
-        jwTokenDTO.setRole(savedUser.getRole().name());
+        JWTokenDTO jwTokenDTO = login(savedUser);
+
+        setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
 
         return jwTokenDTO;
+    }
+
+    @PostMapping("/login/credentials")
+    public ResponseEntity<?> loginWithCredentials(LoginDTO credentials, HttpServletResponse httpServletResponse) throws InvalidAuthException {
+        ResponseEntity<?> response;
+        try {
+            User savedUser = userService.findByEmail(credentials.getUsername()).orElseThrow(()->new InvalidAuthException("Invalid User!"));
+            //authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(savedUser, credentials));
+
+            System.out.println(credentials.getPassword());
+            System.out.println(savedUser.getPassword());
+            if(credentials.getPassword() != savedUser.getPassword())
+                throw new InvalidAuthException("Invalid Credentials");
+
+            JWTokenDTO jwTokenDTO = login(savedUser);
+
+            setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
+
+            response = new ResponseEntity<>(jwTokenDTO, null, HttpStatus.OK);
+        }
+        catch (AuthenticationException | InvalidAuthException e){
+            response = new ResponseEntity<>("Invalid credentials!", null, HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
     }
 
     private User saveUser(RegistrationDTO registrationDTO){
