@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class JWTokenDTO {
     private String accessToken;
     private String role;
+    private String userId;
     private String refreshToken;
 
     private UserDTO userData;

@@ -23,6 +23,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         final String token = getTokenFromRequest(request);
         if(token == null) {
             response.setContentType(APPLICATION_JSON_VALUE);
+            response.setStatus(401);
             Map<String, String> map = new HashMap<>();
             map.put("Error", "Invalid Token!");
             new ObjectMapper().writeValue(response.getOutputStream(), map);

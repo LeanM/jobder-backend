@@ -20,6 +20,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
         response.setContentType(APPLICATION_JSON_VALUE);
+        response.setStatus(401);
         Map<String, String> map = new HashMap<>();
         map.put("Error", "Not authorized Access!");
         new ObjectMapper().writeValue(response.getOutputStream(), map);

@@ -117,6 +117,7 @@ public class OAuthController {
         JWTokenDTO jwTokenDTO = new JWTokenDTO();
         jwTokenDTO.setRole(usuario.getRole().name());
         jwTokenDTO.setAccessToken(jwt);
+        jwTokenDTO.setUserId(usuario.getId());
         jwTokenDTO.setRefreshToken(refresh);
 
         if(usuario.getRole().name().equals("CLIENT")){
@@ -135,12 +136,12 @@ public class OAuthController {
 
         try{
             if(!jwtService.isTokenValid(refreshDTO.getRefreshToken())) {
-                httpStatus = HttpStatus.BAD_REQUEST;
+                httpStatus = HttpStatus.UNAUTHORIZED;
                 throw new InvalidAuthException("Invalid Refresh token!");
             }
 
             if(jwtService.isTokenExpired(refreshDTO.getRefreshToken())) {
-                httpStatus = HttpStatus.CONFLICT;
+                httpStatus = HttpStatus.UNAUTHORIZED;
                 throw new InvalidAuthException("Expired Refresh token!");
             }
 
