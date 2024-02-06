@@ -120,22 +120,16 @@ public class OAuthController {
         jwTokenDTO.setUserId(usuario.getId());
         jwTokenDTO.setRefreshToken(refresh);
 
-        if(usuario.getRole().name().equals("CLIENT")){
-            jwTokenDTO.setUserData(usuario.toClient());
-        } else if (usuario.getRole().name().equals("WORKER")) {
-            jwTokenDTO.setUserData(usuario.toWorker());
-        }
-
         return jwTokenDTO;
     }
 
     @PostMapping("/refreshToken")
-    public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshDTO refreshDTO) throws InvalidAuthException {
+    public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshDTO refreshDTO) {
         ResponseEntity<?> response;
         HttpStatus httpStatus = HttpStatus.OK;
 
         try{
-            if(!jwtService.isTokenValid(refreshDTO.getRefreshToken())) {
+            if(!jwtService.isRefreshTokenValid(refreshDTO.getRefreshToken())) {
                 httpStatus = HttpStatus.UNAUTHORIZED;
                 throw new InvalidAuthException("Invalid Refresh token!");
             }
@@ -152,6 +146,8 @@ public class OAuthController {
 
             JWTokenDTO jwTokenDTO = new JWTokenDTO();
             jwTokenDTO.setAccessToken(jwtToken);
+            jwTokenDTO.setUserId(user.getId());
+            jwTokenDTO.setRole(user.getRole().name());
 
             response = new ResponseEntity<>(jwTokenDTO, null, httpStatus);
         }

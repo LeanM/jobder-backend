@@ -24,7 +24,9 @@ public class JwtService {
     String SECRET_KEY;
 
     public String getToken(UserDetails user) {
-        return getToken(new HashMap<>(), user);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("Permission","AUTH");
+        return getToken(claims, user);
     }
 
     private String getToken(Map<String,Object> extraClaims, UserDetails user) {
@@ -33,13 +35,15 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10)) //10 minutos
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) //30 minutos
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String getRefresh(UserDetails user){
-        return getRefreshToken(new HashMap<>(), user);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("Permission","REFRESH");
+        return getRefreshToken(claims, user);
     }
 
     private String getRefreshToken(Map<String,Object> extraClaims, UserDetails user) {
@@ -48,7 +52,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) //1 dia
+                .setExpiration(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24))) //1 dia
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -64,8 +68,18 @@ public class JwtService {
 
     public boolean isTokenValid(String token){
         try{
-            Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token);
-            return true;
+            String permission = (String) Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody().get("Permission");
+            return !permission.equals("REFRESH");
+        }
+        catch (Exception ex){
+            return false;
+        }
+    }
+
+    public boolean isRefreshTokenValid(String token){
+        try{
+            String permission = (String) Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody().get("Permission");
+            return permission.equals("REFRESH");
         }
         catch (Exception ex){
             return false;

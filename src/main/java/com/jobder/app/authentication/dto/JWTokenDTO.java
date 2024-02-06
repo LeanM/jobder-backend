@@ -13,6 +13,4 @@ public class JWTokenDTO {
     private String role;
     private String userId;
     private String refreshToken;
-
-    private UserDTO userData;
 }
