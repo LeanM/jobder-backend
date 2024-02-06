@@ -38,7 +38,7 @@ public class MatchingController {
             response = new ResponseEntity<>("Interaction completed!", headers, HttpStatus.OK);
         }
         catch(InvalidInteractionException e){
-            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;
@@ -55,7 +55,7 @@ public class MatchingController {
             response = new ResponseEntity<>("Match completed!", headers, HttpStatus.OK);
         }
         catch(InvalidInteractionException e){
-            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;
@@ -72,7 +72,7 @@ public class MatchingController {
             response = new ResponseEntity<>("Client rejected!", headers, HttpStatus.OK);
         }
         catch(InvalidInteractionException | ChatRoomException e){
-            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;
@@ -89,7 +89,7 @@ public class MatchingController {
             response = new ResponseEntity<>("Canceled Match!", headers, HttpStatus.OK);
         }
         catch(InvalidInteractionException | ChatRoomException e){
-            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;
@@ -106,7 +106,7 @@ public class MatchingController {
             response = new ResponseEntity<>("Canceled Match!", headers, HttpStatus.OK);
         }
         catch(InvalidInteractionException | ChatRoomException e){
-            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;
@@ -122,7 +122,7 @@ public class MatchingController {
             response = new ResponseEntity<>(matchingService.getClientMatchedOrLikedWorkers(user.getId()), headers, HttpStatus.OK);
         }
         catch(InvalidClientException e){
-            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;
@@ -138,7 +138,7 @@ public class MatchingController {
             response = new ResponseEntity<>(matchingService.getWorkerLikedOrMatchedClients(user.getId()), headers, HttpStatus.OK);
         }
         catch(InvalidWorkerException e){
-            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.CONFLICT);
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;

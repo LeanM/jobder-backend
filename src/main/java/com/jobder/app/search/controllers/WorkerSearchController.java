@@ -35,7 +35,7 @@ public class WorkerSearchController {
             response = new ResponseEntity<>(toReturn,headers,HttpStatus.OK);
         }
         catch(InvalidClientException e){
-            response = new ResponseEntity<String>(e.getMessage(), headers, 404);
+            response = new ResponseEntity<String>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
         return response;
