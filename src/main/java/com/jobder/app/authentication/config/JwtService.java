@@ -33,7 +33,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 5))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10)) //10 minutos
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -48,7 +48,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) //1 dia
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
