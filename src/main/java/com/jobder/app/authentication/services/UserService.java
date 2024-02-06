@@ -1,6 +1,8 @@
 package com.jobder.app.authentication.services;
 
 import com.jobder.app.authentication.dto.RegistrationDTO;
+import com.jobder.app.authentication.dto.userdtos.UserDTO;
+import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.RoleName;
 import com.jobder.app.authentication.models.User;
 import com.jobder.app.authentication.repositories.UserRepository;
@@ -37,6 +39,14 @@ public class UserService {
         newUser.setRole(RoleName.CLIENT);
 
         return userRepository.save(newUser);
+    }
+
+    public void resetUserSearchParameters(User user) throws InvalidClientException {
+        if(user.getRole().name().equals("CLIENT")){
+            user.setSearchParameters(null);
+            userRepository.save(user);
+        }
+        else throw new InvalidClientException("User is not a client!");
     }
 
     public User registerWorker(RegistrationDTO registrationDTO){
