@@ -1,7 +1,6 @@
 package com.jobder.app.search.dto;
 
-import com.jobder.app.authentication.models.AvailabilityStatus;
-import jakarta.validation.constraints.Email;
+import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,13 +1,11 @@
 package com.jobder.app;
 
-import com.jobder.app.authentication.models.AvailabilityStatus;
-import com.jobder.app.authentication.models.RoleName;
-import com.jobder.app.authentication.models.SearchParameters;
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.AvailabilityStatus;
+import com.jobder.app.authentication.models.users.RoleName;
+import com.jobder.app.authentication.models.users.SearchParameters;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
-import com.jobder.app.authentication.services.UserService;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

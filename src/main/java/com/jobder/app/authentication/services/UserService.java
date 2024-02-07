@@ -1,14 +1,11 @@
 package com.jobder.app.authentication.services;
 
 import com.jobder.app.authentication.dto.RegistrationDTO;
-import com.jobder.app.authentication.dto.userdtos.LoginDTO;
-import com.jobder.app.authentication.dto.userdtos.UserDTO;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
-import com.jobder.app.authentication.models.RoleName;
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.RoleName;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

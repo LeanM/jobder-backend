@@ -2,7 +2,7 @@ package com.jobder.app.matching.services;
 
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.chat.chatroom.ChatRoom;
 import com.jobder.app.chat.chatroom.ChatRoomService;

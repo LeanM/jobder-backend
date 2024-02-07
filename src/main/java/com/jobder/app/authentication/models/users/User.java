@@ -1,4 +1,4 @@
-package com.jobder.app.authentication.models;
+package com.jobder.app.authentication.models.users;
 
 import com.jobder.app.authentication.dto.userdtos.ClientDTO;
 import com.jobder.app.authentication.dto.userdtos.CommonDataDTO;

@@ -1,7 +1,7 @@
 package com.jobder.app.chat.chat;
 
 
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.chat.chatroom.ChatRoom;
 import com.jobder.app.chat.chatroom.ChatRoomService;

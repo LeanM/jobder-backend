@@ -1,7 +1,6 @@
 package com.jobder.app.chat.chat;
 
-import com.jobder.app.authentication.models.User;
-import com.jobder.app.chat.dto.ChatRoomUserResponseDTO;
+import com.jobder.app.authentication.models.users.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;

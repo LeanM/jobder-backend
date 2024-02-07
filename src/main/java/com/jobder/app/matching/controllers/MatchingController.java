@@ -2,9 +2,8 @@ package com.jobder.app.matching.controllers;
 
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.chat.exceptions.ChatRoomException;
-import com.jobder.app.matching.dto.ClientMatchesReponseDTO;
 import com.jobder.app.matching.dto.InteractionRequest;
 import com.jobder.app.matching.dto.MatchRequest;
 import com.jobder.app.matching.exceptions.InvalidInteractionException;
@@ -15,9 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.LinkedList;
-import java.util.List;
 
 @RestController
 @CrossOrigin("*")

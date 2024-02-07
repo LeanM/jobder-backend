@@ -12,8 +12,8 @@ import com.jobder.app.authentication.dto.RefreshDTO;
 import com.jobder.app.authentication.dto.RegistrationDTO;
 import com.jobder.app.authentication.dto.userdtos.LoginDTO;
 import com.jobder.app.authentication.exceptions.InvalidAuthException;
-import com.jobder.app.authentication.models.AvailabilityStatus;
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.AvailabilityStatus;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,12 +24,10 @@ import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.WebUtils;
 
 import java.io.*;
 import java.util.*;
@@ -47,6 +45,9 @@ public class OAuthController {
     JwtService jwtService;
 
     private final AuthenticationManager authenticationManager;
+
+    @Value("${cors.origin}")
+    String corsOrigin;
 
     @Value("${google.clientId}")
     String googleClientId;
@@ -71,7 +72,7 @@ public class OAuthController {
 
         Map<String, String> params = new HashMap<>();
         params.put("code", code);
-        params.put("redirect_uri", "http://localhost:3000");
+        params.put("redirect_uri", corsOrigin);
         params.put("grant_type", "authorization_code");
 
         HttpEntity<Map<String, String>> request = new HttpEntity<>(params, headers);
@@ -85,7 +86,7 @@ public class OAuthController {
 
         JWTokenDTO loginInfo = this.google(registrationDTO);
 
-        setRefreshCookieToResponse(loginInfo.getRefreshToken(), authResponse);
+        //setRefreshCookieToResponse(loginInfo.getRefreshToken(), authResponse);
 
         return new ResponseEntity<>(loginInfo,HttpStatus.OK);
     }
@@ -225,9 +226,14 @@ public class OAuthController {
 
         JWTokenDTO jwTokenDTO = login(savedUser);
 
-        setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
+        //setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
 
         return jwTokenDTO;
+    }
+
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(@AuthenticationPrincipal User user){
+        return null;
     }
 
     @PostMapping("/login/credentials")
@@ -238,12 +244,10 @@ public class OAuthController {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
 
             User savedUser = userService.findByEmail(credentials.getUsername()).orElseThrow(()->new InvalidAuthException("Invalid User!"));
-            System.out.println(credentials.getPassword());
-            System.out.println(savedUser.getPassword());
 
             JWTokenDTO jwTokenDTO = login(savedUser);
 
-            setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
+            //setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
 
             response = new ResponseEntity<>(jwTokenDTO, null, HttpStatus.OK);
         }

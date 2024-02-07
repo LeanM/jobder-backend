@@ -1,12 +1,10 @@
 package com.jobder.app.authentication.dto.userdtos;
 
-import com.jobder.app.authentication.models.SearchParameters;
+import com.jobder.app.authentication.models.users.SearchParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

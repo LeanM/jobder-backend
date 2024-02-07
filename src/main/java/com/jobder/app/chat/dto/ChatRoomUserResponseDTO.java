@@ -1,6 +1,6 @@
 package com.jobder.app.chat.dto;
 
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.chat.chatroom.ChatRoomState;
 import lombok.AllArgsConstructor;
 import lombok.Data;

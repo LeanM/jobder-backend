@@ -1,6 +1,6 @@
 package com.jobder.app.chat.chatroom;
 
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.chat.dto.StartChatRequestDTO;
 import com.jobder.app.chat.exceptions.ChatRoomException;
 import lombok.RequiredArgsConstructor;

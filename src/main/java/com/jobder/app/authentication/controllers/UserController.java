@@ -1,7 +1,7 @@
 package com.jobder.app.authentication.controllers;
 
 import com.jobder.app.authentication.exceptions.InvalidClientException;
-import com.jobder.app.authentication.models.User;
+import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

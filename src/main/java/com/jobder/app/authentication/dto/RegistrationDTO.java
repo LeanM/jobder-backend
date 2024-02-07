@@ -1,11 +1,10 @@
 package com.jobder.app.authentication.dto;
 
-import com.jobder.app.authentication.models.RoleName;
-import com.jobder.app.authentication.models.SearchParameters;
+import com.jobder.app.authentication.models.users.RoleName;
+import com.jobder.app.authentication.models.users.SearchParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 import java.util.Date;
 
