@@ -29,7 +29,7 @@ public class SpringSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws  Exception {
         return http
                 .csrf(csrf -> csrf.disable())
-                //.cors(cors -> cors.disable())
+                .cors(cors -> cors.disable())
                 .exceptionHandling(httpSecurityExceptionHandlingConfigurer -> httpSecurityExceptionHandlingConfigurer.accessDeniedHandler(accessDeniedHandler).authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests( auth ->
                         auth.requestMatchers("/oauth/**").permitAll()
