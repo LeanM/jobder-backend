@@ -1,5 +1,6 @@
 package com.jobder.app.authentication.repositories;
 
+import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import com.jobder.app.authentication.models.users.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -18,12 +19,18 @@ public interface UserRepository extends MongoRepository<User, String> {
 
 
     //@Query("SELECT w FROM User w WHERE w.role = WORKER AND " + HAVERSINE_FORMULA + " < :mindistance ORDER BY w.averageRating DESC")
-    @Query("{ 'role' : 'WORKER' }")
-    List<User> findCloseWorkers(@Param("longitude") Double clientLongitude, @Param("latitude") Double clientLatitude, @Param("mindistance") int minimumDistanceInKm, Pageable pageable);
+    @Query("{ 'role' : 'WORKER', '$or': [{'availabilityStatus' : 'AVAILABLE'}, {'availabilityStatus' : 'MODERATED'}] }")
+    List<User> findWorkers(Pageable pageable);
+
+    @Query("{ 'role' : 'WORKER', 'availabilityStatus' : 'AVAILABLE' }")
+    List<User> findAvailableWorkers(Pageable pageable);
 
 
     //@Query("SELECT w FROM User w WHERE w.role = WORKER AND " + HAVERSINE_FORMULA + " < :mindistance AND w.workSpecialization = :profession ORDER BY w.averageRating DESC")
-    @Query("{ 'role' : 'WORKER', 'workSpecialization' : ?0 }")
-    List<User> findCloseWorkersByProfession(@Param("profession") String profession, @Param("longitude") Double clientLongitude, @Param("latitude") Double clientLatitude, @Param("mindistance") int minimumDistanceInKm, Pageable pageable);
+    @Query("{ 'role' : 'WORKER', 'workSpecialization' : ?0 , 'availabilityStatus' : 'AVAILABLE' }")
+    List<User> findAvailableWorkersByProfession(@Param("profession") String profession, Pageable pageable);
+
+    @Query("{ 'role' : 'WORKER', 'workSpecialization' : ?0 , '$or': [{'availabilityStatus' : 'AVAILABLE'}, {'availabilityStatus' : 'MODERATED'}] }")
+    List<User> findWorkersByProfession(@Param("profession") String profession, Pageable pageable);
 }
 

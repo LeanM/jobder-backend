@@ -12,6 +12,8 @@ public interface InteractionRepository extends MongoRepository<Interaction, Stri
     @Query("{ 'workerId' : ?0 , 'clientId' : ?1 }")
     Interaction findInteractionByWorkerAndClient(String workerId, String clientId);
 
+    boolean existsByClientIdAndWorkerId(String clientId, String workerId);
+
     @Query("{ 'workerId' : ?0 , 'interactionType' : ?1 }")
     List<Interaction> findWorkerTypeInteractions(String workerId, InteractionType interactionType);
 

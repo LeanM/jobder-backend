@@ -1,9 +1,11 @@
 package com.jobder.app.search.services;
 
+import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.users.SearchParameters;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
+import com.jobder.app.matching.services.MatchingService;
 import com.jobder.app.search.dto.RequestClientSearchInfo;
 import com.jobder.app.search.dto.WorkerSearchResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.List;
 public class WorkerSearchService {
 
     private final UserRepository userRepository;
+    private final MatchingService matchingService;
     private final int defaultMinimumDistanceInKm = 50;
     private final int maxPageWorkers = 10;
     private final double EarthRadius = 6371000;
@@ -83,7 +86,7 @@ public class WorkerSearchService {
     }
 
     private List<WorkerSearchResponse> verifyAvailableWorkers(User searchingClient, List<WorkerSearchResponse> workersToVerify){
-        return workersToVerify;
+       return matchingService.validateWorkers(searchingClient, workersToVerify);
     }
 
     private int defineMinimumDistanceInKm(RequestClientSearchInfo clientSearchInfo){
@@ -98,10 +101,11 @@ public class WorkerSearchService {
     private List<WorkerSearchResponse> obtainBestAverageRatingWorkersForUserInfo(RequestClientSearchInfo clientSearchInfo, PageRequest pageRequest){
         List<User> toReturn;
 
-        if(clientSearchInfo.getWorkSpecialization() == "" || clientSearchInfo.getWorkSpecialization() == null)
-            toReturn = userRepository.findCloseWorkers(clientSearchInfo.getLongitude(), clientSearchInfo.getLatitude(), defineMinimumDistanceInKm(clientSearchInfo), pageRequest);
+        if(clientSearchInfo.getWorkSpecialization() == "" || clientSearchInfo.getWorkSpecialization() == null){
+            toReturn = clientSearchInfo.getAvailabilityStatus().name().equals("AVAILABLE") ? userRepository.findAvailableWorkers(pageRequest) : userRepository.findWorkers(pageRequest);
+        }
         else
-            toReturn = userRepository.findCloseWorkersByProfession(clientSearchInfo.getWorkSpecialization(), clientSearchInfo.getLongitude(), clientSearchInfo.getLatitude(), defineMinimumDistanceInKm(clientSearchInfo), pageRequest);
+            toReturn = clientSearchInfo.getAvailabilityStatus().name().equals("AVAILABLE") ? userRepository.findAvailableWorkersByProfession(clientSearchInfo.getWorkSpecialization(), pageRequest) : userRepository.findWorkersByProfession(clientSearchInfo.getWorkSpecialization(), pageRequest);
 
         return filterCloseWorkers(clientSearchInfo, toReturn);
     }

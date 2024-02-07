@@ -1,5 +1,6 @@
 package com.jobder.app.matching.services;
 
+import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.users.User;
@@ -16,6 +17,7 @@ import com.jobder.app.matching.models.Interaction;
 import com.jobder.app.matching.models.InteractionState;
 import com.jobder.app.matching.models.InteractionType;
 import com.jobder.app.matching.repositories.InteractionRepository;
+import com.jobder.app.search.dto.WorkerSearchResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -179,6 +181,18 @@ public class MatchingService {
 
             toReturn.add(workerMatchesResponseDTO);
         }
+    }
+
+    public List<WorkerSearchResponse> validateWorkers(User client, List<WorkerSearchResponse> workersToValidate){
+        List<WorkerSearchResponse> validatedWorkers = new LinkedList<>();
+        for(WorkerSearchResponse workerToValidate : workersToValidate){
+            if(!interactionRepository.existsByClientIdAndWorkerId(client.getId(),workerToValidate.getWorker().getId())){
+                //Si no poseen una interaccion
+                validatedWorkers.add(workerToValidate);
+            }
+        }
+
+        return validatedWorkers;
     }
 
 }
