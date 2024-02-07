@@ -14,6 +14,7 @@ import com.jobder.app.authentication.dto.userdtos.LoginDTO;
 import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import com.jobder.app.authentication.models.users.User;
+import com.jobder.app.authentication.repositories.TokenRepository;
 import com.jobder.app.authentication.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,6 +46,7 @@ public class OAuthController {
     JwtService jwtService;
 
     private final AuthenticationManager authenticationManager;
+    private final TokenRepository tokenRepository;
 
     @Value("${cors.origin}")
     String corsOrigin;
@@ -116,70 +118,33 @@ public class OAuthController {
         final GoogleIdToken googleIdToken = GoogleIdToken.parse(verifier.getJsonFactory(), registrationDTO.getValue());
         final GoogleIdToken.Payload payload = googleIdToken.getPayload();
 
-        User usuario = new User();
-        if(userService.existsEmail(payload.getEmail()))
-            usuario = userService.getByEmail(payload.getEmail()).get();
-        else {
+        User usuario = userService.getByEmail(payload.getEmail()).orElse(null);
+
+        if(usuario == null) {
             registrationDTO.setName((String) payload.getOrDefault("name",""));
             registrationDTO.setPicture((String) payload.getOrDefault("picture",""));
             registrationDTO.setEmail(payload.getEmail());
-            usuario = saveUser(registrationDTO);
+            usuario = userService.registerUser(registrationDTO);
         }
 
-        return login(usuario);
+        return userService.login(usuario);
     }
-
-    private JWTokenDTO login(User usuario){
-        //No necesito autenticar por que es logueo con google
-
-        String jwt = jwtService.getToken(usuario);
-        String refresh = jwtService.getRefresh(usuario);
-        JWTokenDTO jwTokenDTO = new JWTokenDTO();
-        jwTokenDTO.setRole(usuario.getRole().name());
-        jwTokenDTO.setAccessToken(jwt);
-        jwTokenDTO.setUserId(usuario.getId());
-        jwTokenDTO.setRefreshToken(refresh);
-
-        return jwTokenDTO;
-    }
-
 
     @PostMapping("/refreshToken")
     public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshDTO refreshDTO) {
         ResponseEntity<?> response;
-        HttpStatus httpStatus = HttpStatus.OK;
 
         try{
-            if(!jwtService.isRefreshTokenValid(refreshDTO.getRefreshToken())) {
-                httpStatus = HttpStatus.UNAUTHORIZED;
-                throw new InvalidAuthException("Invalid Refresh token!");
-            }
-
-            if(jwtService.isTokenExpired(refreshDTO.getRefreshToken())) {
-                httpStatus = HttpStatus.UNAUTHORIZED;
-                throw new InvalidAuthException("Expired Refresh token!");
-            }
-
-            String userEmail = jwtService.getUsernameFromToken(refreshDTO.getRefreshToken());
-            User user = userService.findByEmail(userEmail).orElseThrow(()-> new InvalidAuthException("Invalid refresh Token!"));
-
-            String jwtToken = jwtService.getToken(user);
-
-            JWTokenDTO jwTokenDTO = new JWTokenDTO();
-            jwTokenDTO.setAccessToken(jwtToken);
-            jwTokenDTO.setUserId(user.getId());
-            jwTokenDTO.setRole(user.getRole().name());
-
-            response = new ResponseEntity<>(jwTokenDTO, null, httpStatus);
+            response = new ResponseEntity<>(userService.refreshUserToken(refreshDTO), null, HttpStatus.OK);
         }
         catch (InvalidAuthException e){
-            response = new ResponseEntity<>(e.getMessage(), null , httpStatus);
+            response = new ResponseEntity<>(e.getMessage(), null , HttpStatus.UNAUTHORIZED);
         }
 
         return response;
     }
 
-
+    /*
     @RequestMapping("/refreshTokenCookie")
     public ResponseEntity<?> refreshAccessTokenCookie(@CookieValue(name = "refresh_token") String refreshToken) {
         ResponseEntity<?> response;
@@ -214,41 +179,28 @@ public class OAuthController {
 
         return response;
     }
-
-    @PostMapping("/register/client/credentials")
+    */
+    @PostMapping("/register/credentials")
     public JWTokenDTO registerWithCredentials(RegistrationDTO usuario, HttpServletResponse httpServletResponse) throws InvalidAuthException {
-        //authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(usuario.getUsername(), usuario.getPassword()));
         if(userService.findByEmail(usuario.getEmail()).isPresent()){
             throw new InvalidAuthException("Email already exists!");
         }
-
-        User savedUser = userService.registerClient(usuario);
-
-        JWTokenDTO jwTokenDTO = login(savedUser);
+        User savedUser = userService.registerUser(usuario);
+        JWTokenDTO jwTokenDTO = userService.login(savedUser);
 
         //setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
 
         return jwTokenDTO;
     }
 
-    @GetMapping("/logout")
-    public ResponseEntity<?> logout(@AuthenticationPrincipal User user){
-        return null;
-    }
-
     @PostMapping("/login/credentials")
     public ResponseEntity<?> loginWithCredentials(LoginDTO credentials, HttpServletResponse httpServletResponse) throws InvalidAuthException {
         ResponseEntity<?> response;
         try {
-
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
-
             User savedUser = userService.findByEmail(credentials.getUsername()).orElseThrow(()->new InvalidAuthException("Invalid User!"));
-
-            JWTokenDTO jwTokenDTO = login(savedUser);
-
+            JWTokenDTO jwTokenDTO = userService.login(savedUser);
             //setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
-
             response = new ResponseEntity<>(jwTokenDTO, null, HttpStatus.OK);
         }
         catch (AuthenticationException | InvalidAuthException e){
@@ -256,34 +208,5 @@ public class OAuthController {
         }
 
         return response;
-    }
-
-    private User saveUser(RegistrationDTO registrationDTO){
-        User usuario = new User();
-
-        usuario.setEmail(registrationDTO.getEmail());
-        usuario.setName(registrationDTO.getName());
-        usuario.setPicture(registrationDTO.getPicture());
-        usuario.setPassword(passwordEncoder.encode(secretPsw));
-        usuario.setPhoneNumber(registrationDTO.getPhoneNumber());
-        usuario.setAddress(registrationDTO.getAddress());
-        usuario.setLatitude(registrationDTO.getLatitude());
-        usuario.setLongitude(registrationDTO.getLongitude());
-        usuario.setBirthDate(registrationDTO.getBirthDate());
-
-        usuario.setRole(registrationDTO.getAccountRole());
-
-        if(registrationDTO.getAccountRole().name().equals("WORKER")){
-            usuario.setWorkSpecialization(registrationDTO.getWorkSpecialization());
-            usuario.setAvailabilityStatus(AvailabilityStatus.MODERATED);
-            usuario.setAverageRating(1f);
-            usuario.setWorksFinished(0);
-        } else if (registrationDTO.getAccountRole().name().equals("CLIENT")) {
-            if(registrationDTO.getSearchParameters() != null){
-                usuario.setSearchParameters(registrationDTO.getSearchParameters());
-            }
-        }
-
-        return userService.save(usuario);
     }
 }

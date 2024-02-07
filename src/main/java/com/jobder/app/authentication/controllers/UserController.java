@@ -2,6 +2,7 @@ package com.jobder.app.authentication.controllers;
 
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.users.User;
+import com.jobder.app.authentication.services.TokenService;
 import com.jobder.app.authentication.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,12 +20,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final TokenService tokenService;
 
     @GetMapping("/user")
     public ResponseEntity<?> getUser(@AuthenticationPrincipal User user){
         if(user.getRole().name().equals("CLIENT"))
             return new ResponseEntity<>(user.toClient(),HttpStatus.OK);
         else return new ResponseEntity<>(user.toWorker(),HttpStatus.OK);
+    }
+
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(@AuthenticationPrincipal User user){
+        tokenService.cleanUserToken(user);
+        return new ResponseEntity<>("Succesfully logged out!", HttpStatus.OK);
     }
 
     @GetMapping("/userSearchParameters")

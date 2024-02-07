@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.jobder.app.authentication.models.Token;
+import com.jobder.app.authentication.repositories.TokenRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +22,9 @@ import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
+
+    @Autowired
+    TokenRepository tokenRepository;
 
     @Value("${jwt.secret}")
     String SECRET_KEY;
@@ -68,6 +74,9 @@ public class JwtService {
 
     public boolean isTokenValid(String token){
         try{
+            Token actualToken = tokenRepository.findByToken(token).orElse(null);
+            if(actualToken == null)
+                return false;
             String permission = (String) Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody().get("Permission");
             return !permission.equals("REFRESH");
         }
