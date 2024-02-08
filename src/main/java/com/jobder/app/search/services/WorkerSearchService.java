@@ -36,6 +36,10 @@ public class WorkerSearchService {
         List<WorkerSearchResponse> workersFinalResult = new LinkedList<>();
 
         User searchingClient = userRepository.findById(clientSearchInfo.getId()).orElseThrow(() -> new InvalidClientException("No Client with that ID"));
+
+        if(searchingClient.getLatitude() == null || searchingClient.getLongitude() == null)
+            throw new InvalidClientException("Client has not a location setted");
+
         clientSearchInfo.setLongitude(searchingClient.getLongitude());
         clientSearchInfo.setLatitude(searchingClient.getLatitude());
 

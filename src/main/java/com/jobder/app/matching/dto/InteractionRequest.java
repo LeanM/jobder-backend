@@ -1,5 +1,6 @@
 package com.jobder.app.matching.dto;
 
+import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import com.jobder.app.matching.models.InteractionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,4 +17,5 @@ public class InteractionRequest {
     @NonNull
     private InteractionType interactionType;
     private String clientProblemDescription;
+    private AvailabilityStatus clientUrgency;
 }

@@ -3,6 +3,7 @@ package com.jobder.app.matching.services;
 import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
+import com.jobder.app.authentication.models.users.RoleName;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.chat.chatroom.ChatRoom;
@@ -82,7 +83,9 @@ public class MatchingService {
             actualInteraction.setInteractionType(InteractionType.MATCH);
             actualInteraction.setCreatedAt(new Date());
 
+            interactionRepository.save(actualInteraction);
 
+            chatRoomService.setSeenChatRoomOnOpenChat(matchRequest.getWorkerId(), matchRequest.getClientId());
         }
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
     }
@@ -155,7 +158,7 @@ public class MatchingService {
 
     public List<WorkerMatchesResponseDTO> getWorkerLikedOrMatchedClients(String workerId) throws InvalidWorkerException {
         User worker = userRepository.findById(workerId).orElseThrow(()->new InvalidWorkerException("No Worker with that ID"));
-        if(!worker.getRole().name().equals("WOKER"))
+        if(!worker.getRole().name().equals(RoleName.WORKER.name()))
             throw new InvalidWorkerException("You are not a Worker!");
 
         List<WorkerMatchesResponseDTO> workerMatchesResponseDTOS = new LinkedList<>();

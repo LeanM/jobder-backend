@@ -2,6 +2,7 @@ package com.jobder.app.matching.models;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -22,6 +23,7 @@ public class Interaction {
     private InteractionType interactionType;
     private InteractionState interactionState;
     private String clientProblemDescription;
+    private AvailabilityStatus clientUrgency;
 
     private Date createdAt;
     private Date closedAt;

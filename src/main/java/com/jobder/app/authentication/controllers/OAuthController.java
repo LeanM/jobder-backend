@@ -124,6 +124,7 @@ public class OAuthController {
             registrationDTO.setName((String) payload.getOrDefault("name",""));
             registrationDTO.setPicture((String) payload.getOrDefault("picture",""));
             registrationDTO.setEmail(payload.getEmail());
+            
             usuario = userService.registerUser(registrationDTO);
         }
 
@@ -181,10 +182,11 @@ public class OAuthController {
     }
     */
     @PostMapping("/register/credentials")
-    public JWTokenDTO registerWithCredentials(RegistrationDTO usuario, HttpServletResponse httpServletResponse) throws InvalidAuthException {
+    public JWTokenDTO registerWithCredentials(@RequestBody RegistrationDTO usuario) throws InvalidAuthException {
         if(userService.findByEmail(usuario.getEmail()).isPresent()){
             throw new InvalidAuthException("Email already exists!");
         }
+
         User savedUser = userService.registerUser(usuario);
         JWTokenDTO jwTokenDTO = userService.login(savedUser);
 
@@ -194,11 +196,12 @@ public class OAuthController {
     }
 
     @PostMapping("/login/credentials")
-    public ResponseEntity<?> loginWithCredentials(LoginDTO credentials, HttpServletResponse httpServletResponse) throws InvalidAuthException {
+    public ResponseEntity<?> loginWithCredentials(@RequestBody LoginDTO credentials) {
         ResponseEntity<?> response;
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
             User savedUser = userService.findByEmail(credentials.getUsername()).orElseThrow(()->new InvalidAuthException("Invalid User!"));
+
             JWTokenDTO jwTokenDTO = userService.login(savedUser);
             //setRefreshCookieToResponse(jwTokenDTO.getRefreshToken(), httpServletResponse);
             response = new ResponseEntity<>(jwTokenDTO, null, HttpStatus.OK);
