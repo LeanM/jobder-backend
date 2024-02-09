@@ -16,25 +16,25 @@ import java.util.List;
 @Slf4j
 public class PushNotificationService {
 
-    private final ChatMessageRepository chatMessageRepository;
+    private final ChatNotificationRepository notificationRepository;
 
-    private List<ChatMessage> getNotifs(String userId) {
-        var notifs = chatMessageRepository.findByRecipientIdAndDeliveredFalse(userId);
+    private List<ChatNotification> getNotifs(String userId) {
+        var notifs = notificationRepository.findByToUserIdAndDeliveredFalse(userId);
         notifs.forEach(x -> x.setDelivered(true));
-        chatMessageRepository.saveAll(notifs);
+        notificationRepository.deleteAll(notifs);
         return notifs;
     }
 
-    public Flux<ServerSentEvent<List<ChatMessage>>> getNotificationsByRecipientID(String userID) {
+    public Flux<ServerSentEvent<List<ChatNotification>>> getNotificationsByRecipientID(String userID) {
         if (userID != null && !userID.isBlank()) {
             return Flux.interval(Duration.ofSeconds(5))
                     .publishOn(Schedulers.boundedElastic())
-                    .map(sequence -> ServerSentEvent.<List<ChatMessage>>builder().id(String.valueOf(sequence))
+                    .map(sequence -> ServerSentEvent.<List<ChatNotification>>builder().id(String.valueOf(sequence))
                             .event("user-list-event").data(getNotifs(userID))
                             .build());
         }
 
-        return Flux.interval(Duration.ofSeconds(60)).map(sequence -> ServerSentEvent.<List<ChatMessage>>builder()
+        return Flux.interval(Duration.ofSeconds(60)).map(sequence -> ServerSentEvent.<List<ChatNotification>>builder()
                 .id(String.valueOf(sequence)).event("user-list-event").data(new ArrayList<>()).build());
     }
 }

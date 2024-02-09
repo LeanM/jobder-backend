@@ -22,15 +22,22 @@ public class ChatMessageService {
     private final ChatMessageRepository repository;
     private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
+    private final ChatNotificationRepository notificationRepository;
 
     public ChatMessage save(ChatMessage chatMessage) throws InvalidAuthException {
         var chatId = chatRoomService
                 .getChatRoomId(chatMessage.getSenderId(), chatMessage.getRecipientId(), false)
                 .orElseThrow(()-> new InvalidAuthException("No Chatroom between users!")); // You can create your own dedicated exception
         chatMessage.setChatId(chatId);
-        chatMessage.setDelivered(false);
+
+        ChatNotification chatNotification = new ChatNotification();
+        chatNotification.setMessage(repository.save(chatMessage));
+        chatNotification.setDelivered(false);
+        chatNotification.setToUserId(chatMessage.getRecipientId());
+        notificationRepository.save(chatNotification);
+
         chatRoomService.setUnseenChatRoomOnMessage(chatMessage.getSenderId(),chatMessage.getRecipientId());
-        repository.save(chatMessage);
+
         return chatMessage;
     }
 
@@ -40,18 +47,8 @@ public class ChatMessageService {
 
         //Colocar todos los mensajes como delivered
         List<ChatMessage> chatMessages = chatId.map(repository::findByChatId).orElse(new ArrayList<>());
-        setMessagesDelivered(chatMessages);
 
         return chatMessages;
-    }
-
-    private void setMessagesDelivered(List<ChatMessage> chatMessages){
-        for(ChatMessage message : chatMessages){
-            if(!message.getDelivered()){
-                message.setDelivered(true);
-                repository.save(message);
-            }
-        }
     }
 
     public List<ChatRoomUserResponseDTO> findChatUsers(String userId) {

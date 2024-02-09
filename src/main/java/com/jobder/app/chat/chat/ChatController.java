@@ -47,7 +47,8 @@ public class ChatController {
     }
 
     @GetMapping("/suscribe")
-    public Flux<ServerSentEvent<List<ChatMessage>>> openUserConnection(@AuthenticationPrincipal User user) {
+    public Flux<ServerSentEvent<List<ChatNotification>>> openUserConnection(@AuthenticationPrincipal User user) {
+        System.out.println(user.getId());
         return notificationService.getNotificationsByRecipientID(user.getId());
     }
 

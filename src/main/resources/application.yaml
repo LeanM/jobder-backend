@@ -4,3 +4,9 @@ spring:
       uri: mongodb+srv://root:root@cluster0.wm8v4o2.mongodb.net/jobder?retryWrites=true&w=majority
 server:
   port: 8080
+  ssl:
+    key-store-type: PKCS12
+    key-store: './websocket-notification-sender-keystore.p12'
+    key-store-password: asdasd
+    key-alias: websocket-notification-sender-key
+    enabled: true
