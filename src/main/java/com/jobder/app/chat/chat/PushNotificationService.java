@@ -27,14 +27,14 @@ public class PushNotificationService {
 
     public Flux<ServerSentEvent<List<ChatMessage>>> getNotificationsByRecipientID(String userID) {
         if (userID != null && !userID.isBlank()) {
-            return Flux.interval(Duration.ofSeconds(3))
+            return Flux.interval(Duration.ofSeconds(5))
                     .publishOn(Schedulers.boundedElastic())
                     .map(sequence -> ServerSentEvent.<List<ChatMessage>>builder().id(String.valueOf(sequence))
                             .event("user-list-event").data(getNotifs(userID))
                             .build());
         }
 
-        return Flux.interval(Duration.ofSeconds(1)).map(sequence -> ServerSentEvent.<List<ChatMessage>>builder()
+        return Flux.interval(Duration.ofSeconds(60)).map(sequence -> ServerSentEvent.<List<ChatMessage>>builder()
                 .id(String.valueOf(sequence)).event("user-list-event").data(new ArrayList<>()).build());
     }
 }
