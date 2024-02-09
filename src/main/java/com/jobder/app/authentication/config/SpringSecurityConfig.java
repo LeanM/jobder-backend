@@ -38,7 +38,7 @@ public class SpringSecurityConfig {
                                 .requestMatchers("search/unlogged/**").permitAll()
                                 .requestMatchers("/chatroom/**").authenticated()
                                 .requestMatchers("/matching/**").authenticated()
-                                .requestMatchers("/chat/messages/**").authenticated()
+                                .requestMatchers("/chat/**").authenticated()
                                 .anyRequest().permitAll())
                 .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)

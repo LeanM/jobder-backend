@@ -1,12 +1,14 @@
 package com.jobder.app.chat.chat;
 
 
+import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.chat.chatroom.ChatRoom;
 import com.jobder.app.chat.chatroom.ChatRoomService;
 import com.jobder.app.chat.dto.ChatRoomUserResponseDTO;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.message.Message;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,11 +23,12 @@ public class ChatMessageService {
     private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
 
-    public ChatMessage save(ChatMessage chatMessage) {
+    public ChatMessage save(ChatMessage chatMessage) throws InvalidAuthException {
         var chatId = chatRoomService
                 .getChatRoomId(chatMessage.getSenderId(), chatMessage.getRecipientId(), false)
-                .orElseThrow(); // You can create your own dedicated exception
+                .orElseThrow(()-> new InvalidAuthException("No Chatroom between users!")); // You can create your own dedicated exception
         chatMessage.setChatId(chatId);
+        chatMessage.setDelivered(false);
         chatRoomService.setUnseenChatRoomOnMessage(chatMessage.getSenderId(),chatMessage.getRecipientId());
         repository.save(chatMessage);
         return chatMessage;
@@ -34,7 +37,21 @@ public class ChatMessageService {
     public List<ChatMessage> findChatMessages(String senderId, String recipientId) {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
         chatRoomService.setSeenChatRoomOnOpenChat(senderId, recipientId);
-        return chatId.map(repository::findByChatId).orElse(new ArrayList<>());
+
+        //Colocar todos los mensajes como delivered
+        List<ChatMessage> chatMessages = chatId.map(repository::findByChatId).orElse(new ArrayList<>());
+        setMessagesDelivered(chatMessages);
+
+        return chatMessages;
+    }
+
+    private void setMessagesDelivered(List<ChatMessage> chatMessages){
+        for(ChatMessage message : chatMessages){
+            if(!message.getDelivered()){
+                message.setDelivered(true);
+                repository.save(message);
+            }
+        }
     }
 
     public List<ChatRoomUserResponseDTO> findChatUsers(String userId) {

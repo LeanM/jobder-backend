@@ -1,39 +1,42 @@
 package com.jobder.app.chat.chat;
 
+import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.models.users.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
-@Controller
+@RestController
 @CrossOrigin("*")
 @RequiredArgsConstructor
 @RequestMapping("/chat")
 public class ChatController {
 
-    private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
+    private final PushNotificationService notificationService;
 
-    @MessageMapping("/chat")
-    public void processMessage(@Payload ChatMessage chatMessage) {
-        ChatMessage savedMsg = chatMessageService.save(chatMessage);
-        messagingTemplate.convertAndSendToUser(
-                chatMessage.getRecipientId(), "/queue/messages",
-                new ChatNotification(
-                        savedMsg.getId(),
-                        savedMsg.getSenderId(),
-                        savedMsg.getRecipientId(),
-                        savedMsg.getContent(),
-                        savedMsg.getTimestamp()
-                )
-        );
+    @PostMapping("/send")
+    public ResponseEntity<?> processMessage(@RequestBody ChatMessage chatMessage, @AuthenticationPrincipal User user) {
+        //Hacer este metodo http autenticando al usuario y verificando que posea un match o chatroom
+        chatMessage.setSenderId(user.getId());
+        ResponseEntity<?> response;
+        try{
+            response = new ResponseEntity<>(chatMessageService.save(chatMessage), HttpStatus.OK);
+        }catch(InvalidAuthException e){
+            response = new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        return response;
     }
 
     @GetMapping("/messages/{recipientId}")
@@ -42,6 +45,12 @@ public class ChatController {
         return ResponseEntity
                 .ok(chatMessageService.findChatMessages(user.getId(), recipientId));
     }
+
+    @GetMapping("/suscribe")
+    public Flux<ServerSentEvent<List<ChatMessage>>> openUserConnection(@AuthenticationPrincipal User user) {
+        return notificationService.getNotificationsByRecipientID(user.getId());
+    }
+
     /*
 
     @GetMapping("/chatusers/{userId}")

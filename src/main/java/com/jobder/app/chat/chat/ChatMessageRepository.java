@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
     List<ChatMessage> findByChatId(String chatId);
+    List<ChatMessage> findByRecipientIdAndDeliveredFalse(String recipientId);
 }
