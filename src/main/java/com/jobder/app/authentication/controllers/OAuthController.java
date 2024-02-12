@@ -57,9 +57,6 @@ public class OAuthController {
     @Value("${google.clientSecret}")
     String googleClientSecret;
 
-    @Value("${secretPsw}")
-    String secretPsw;
-
     @Autowired
     PasswordEncoder passwordEncoder;
 
@@ -124,6 +121,7 @@ public class OAuthController {
             registrationDTO.setName((String) payload.getOrDefault("name",""));
             registrationDTO.setPicture((String) payload.getOrDefault("picture",""));
             registrationDTO.setEmail(payload.getEmail());
+            registrationDTO.setIsGoogleRegister(true);
             
             usuario = userService.registerUser(registrationDTO);
         }
@@ -186,7 +184,7 @@ public class OAuthController {
         if(userService.findByEmail(usuario.getEmail()).isPresent()){
             throw new InvalidAuthException("Email already exists!");
         }
-
+        usuario.setIsGoogleRegister(false);
         User savedUser = userService.registerUser(usuario);
         JWTokenDTO jwTokenDTO = userService.login(savedUser);
 

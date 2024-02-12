@@ -6,6 +6,7 @@ import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.chat.chatroom.ChatRoom;
 import com.jobder.app.chat.chatroom.ChatRoomService;
 import com.jobder.app.chat.dto.ChatRoomUserResponseDTO;
+import com.jobder.app.chat.exceptions.ChatRoomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +22,10 @@ public class ChatMessageService {
     private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
 
-    public ChatMessage save(ChatMessage chatMessage) {
+    public ChatMessage save(ChatMessage chatMessage) throws ChatRoomException {
         var chatId = chatRoomService
                 .getChatRoomId(chatMessage.getSenderId(), chatMessage.getRecipientId(), false)
-                .orElseThrow(); // You can create your own dedicated exception
+                .orElseThrow(()->new ChatRoomException("Users doenst have a chat room between them!")); // You can create your own dedicated exception
         chatMessage.setChatId(chatId);
         chatRoomService.setUnseenChatRoomOnMessage(chatMessage.getSenderId(),chatMessage.getRecipientId());
         repository.save(chatMessage);

@@ -1,6 +1,7 @@
 package com.jobder.app.chat.chat;
 
 import com.jobder.app.authentication.models.users.User;
+import com.jobder.app.chat.exceptions.ChatRoomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -23,17 +24,24 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
-        ChatMessage savedMsg = chatMessageService.save(chatMessage);
-        messagingTemplate.convertAndSendToUser(
-                chatMessage.getRecipientId(), "/queue/messages",
-                new ChatNotification(
-                        savedMsg.getId(),
-                        savedMsg.getSenderId(),
-                        savedMsg.getRecipientId(),
-                        savedMsg.getContent(),
-                        savedMsg.getTimestamp()
-                )
-        );
+        //Realizar autenticacion al enviar un mensaje?
+        try{
+            ChatMessage savedMsg = chatMessageService.save(chatMessage);
+            messagingTemplate.convertAndSendToUser(
+                    chatMessage.getRecipientId(), "/queue/messages",
+                    new ChatNotification(
+                            savedMsg.getId(),
+                            savedMsg.getSenderId(),
+                            savedMsg.getRecipientId(),
+                            savedMsg.getContent(),
+                            savedMsg.getTimestamp()
+                    )
+            );
+        }catch (ChatRoomException e){
+            System.out.println(e.getMessage());
+        }
+
+
     }
 
     @GetMapping("/messages/{recipientId}")
@@ -42,12 +50,4 @@ public class ChatController {
         return ResponseEntity
                 .ok(chatMessageService.findChatMessages(user.getId(), recipientId));
     }
-    /*
-
-    @GetMapping("/chatusers/{userId}")
-    public ResponseEntity<List<ChatRoomUserResponseDTO>> findChatUsers(@PathVariable String userId){
-        return ResponseEntity
-                .ok(chatMessageService.findChatUsers(userId));
-    }
-     */
 }
