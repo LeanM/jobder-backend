@@ -28,9 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final TokenService tokenService;
-
-    @Value("${secretPsw}")
-    String secretPsw;
+    private final RandomPasswordGenerator randomPasswordGenerator;
 
     @Autowired
     BCryptPasswordEncoder passwordEncoder;
@@ -81,24 +79,29 @@ public class UserService {
         usuario.setEmail(registrationDTO.getEmail());
         usuario.setName(registrationDTO.getName());
         usuario.setPicture(registrationDTO.getPicture());
-        usuario.setPassword(passwordEncoder.encode(secretPsw));
-        usuario.setPhoneNumber(registrationDTO.getPhoneNumber());
-        usuario.setAddress(registrationDTO.getAddress());
-        usuario.setLatitude(registrationDTO.getLatitude());
-        usuario.setLongitude(registrationDTO.getLongitude());
-        usuario.setBirthDate(registrationDTO.getBirthDate());
 
-        usuario.setRole(registrationDTO.getAccountRole());
+        if(!registrationDTO.getIsGoogleRegister()) {
+            usuario.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
+            usuario.setPhoneNumber(registrationDTO.getPhoneNumber());
+            usuario.setAddress(registrationDTO.getAddress());
+            usuario.setLatitude(registrationDTO.getLatitude());
+            usuario.setLongitude(registrationDTO.getLongitude());
+            usuario.setBirthDate(registrationDTO.getBirthDate());
 
-        if(registrationDTO.getAccountRole().name().equals("WORKER")){
-            usuario.setWorkSpecialization(registrationDTO.getWorkSpecialization());
-            usuario.setAvailabilityStatus(AvailabilityStatus.MODERATED);
-            usuario.setAverageRating(1f);
-            usuario.setWorksFinished(0);
-        } else if (registrationDTO.getAccountRole().name().equals("CLIENT")) {
-            if(registrationDTO.getSearchParameters() != null){
-                usuario.setSearchParameters(registrationDTO.getSearchParameters());
+            usuario.setRole(registrationDTO.getAccountRole());
+
+            if (registrationDTO.getAccountRole().name().equals("WORKER")) {
+                usuario.setWorkSpecialization(registrationDTO.getWorkSpecialization());
+                usuario.setAvailabilityStatus(AvailabilityStatus.MODERATED);
+                usuario.setAverageRating(1f);
+                usuario.setWorksFinished(0);
+            } else if (registrationDTO.getAccountRole().name().equals("CLIENT")) {
+                if (registrationDTO.getSearchParameters() != null) {
+                    usuario.setSearchParameters(registrationDTO.getSearchParameters());
+                }
             }
+        } else {
+            usuario.setPassword(passwordEncoder.encode(randomPasswordGenerator.getRandomPassword()));
         }
 
         return save(usuario);

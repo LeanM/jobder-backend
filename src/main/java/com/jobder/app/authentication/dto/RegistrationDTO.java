@@ -14,6 +14,7 @@ import java.util.Date;
 public class RegistrationDTO {
     private RoleName accountRole;
     private String value;
+    private Boolean isGoogleRegister;
 
     //Common client and worker
     private String name;
