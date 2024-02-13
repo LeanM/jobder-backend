@@ -20,11 +20,13 @@ import com.jobder.app.matching.models.InteractionType;
 import com.jobder.app.matching.repositories.InteractionRepository;
 import com.jobder.app.search.dto.WorkerSearchResponse;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -125,24 +127,38 @@ public class MatchingService {
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
     }
 
-    public List<ClientMatchesReponseDTO> getClientMatchedOrLikedWorkers(String clientId) throws InvalidClientException {
+    public List<ClientMatchesReponseDTO> getClientMatchedOrLikedWorkers(String clientId) throws InvalidClientException, InvalidInteractionException {
         User client = userRepository.findById(clientId).orElseThrow(() -> new InvalidClientException("No client with that ID"));
         if(!client.getRole().name().equals("CLIENT")){
             throw new InvalidClientException("You are not a Client!");
         }
-
+        List<ChatRoom> clientChatrooms = chatRoomService.getUserChatRoomsOrderedByLastMessage(clientId);
         List<ClientMatchesReponseDTO> clientMatchedWorkers = new LinkedList<>();
-        List<Interaction> clientMatchInteractions = interactionRepository.findClientTypeInteractions(clientId, InteractionType.MATCH);
-        List<Interaction> clientLikeInteractions = interactionRepository.findClientTypeInteractions(clientId, InteractionType.CLIENT_LIKE);
 
-        fillClientMatchedOrLikedWorkers(clientMatchedWorkers, clientMatchInteractions);
-        fillClientMatchedOrLikedWorkers(clientMatchedWorkers, clientLikeInteractions);
+
+        fillClientMatchedOrLikedWorkers(clientMatchedWorkers, clientChatrooms);
 
         return clientMatchedWorkers;
     }
 
-    private void fillClientMatchedOrLikedWorkers(List<ClientMatchesReponseDTO> toReturn, List<Interaction> clientMatchedOrLikedWorkers){
+    private void fillClientMatchedOrLikedWorkers(List<ClientMatchesReponseDTO> toReturn, List<ChatRoom> clientChatrooms) throws InvalidInteractionException {
 
+        for(ChatRoom clientChatRoom : clientChatrooms){
+            Interaction interaction = interactionRepository.findInteractionByWorkerAndClient(clientChatRoom.getRecipientId(), clientChatRoom.getSenderId());
+            if(interaction.getInteractionType().equals(InteractionType.MATCH) || interaction.getInteractionType().equals(InteractionType.CLIENT_LIKE)){
+                Optional<User> worker = userRepository.findById(interaction.getWorkerId());
+                if(!worker.isPresent())
+                    throw new InvalidInteractionException("Invalid Interaction");
+
+                ClientMatchesReponseDTO clientMatchesReponseDTO = new ClientMatchesReponseDTO();
+                clientMatchesReponseDTO.setChatRoom(clientChatRoom);
+                clientMatchesReponseDTO.setUser(worker.get().toWorker());
+                clientMatchesReponseDTO.setInteraction(interaction);
+
+                toReturn.add(clientMatchesReponseDTO);
+            }
+        }
+        /*
         for (Interaction interaction : clientMatchedOrLikedWorkers){
             ClientMatchesReponseDTO clientMatchesReponseDTO = new ClientMatchesReponseDTO();
             ChatRoom chatRoomBetweenBoth = chatRoomService.getUserChatRoomWithOtherUser(interaction.getClientId(), interaction.getWorkerId());
@@ -154,6 +170,8 @@ public class MatchingService {
 
             toReturn.add(clientMatchesReponseDTO);
         }
+
+         */
     }
 
     public List<WorkerMatchesResponseDTO> getWorkerLikedOrMatchedClients(String workerId) throws InvalidWorkerException {

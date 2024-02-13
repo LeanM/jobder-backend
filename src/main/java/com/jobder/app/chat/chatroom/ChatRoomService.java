@@ -7,6 +7,8 @@ import com.jobder.app.chat.exceptions.ChatRoomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,8 +64,8 @@ public class ChatRoomService {
         return chatId;
     }
 
-    public List<ChatRoom> getUserChatRooms(String userId){
-        return chatRoomRepository.findBySenderId(userId);
+    public List<ChatRoom> getUserChatRoomsOrderedByLastMessage(String userId){
+        return chatRoomRepository.findBySenderIdOrderByLastMessage(userId);
     }
 
     public ChatRoom getUserChatRoomWithOtherUser(String userId, String otherUserId) {
@@ -71,10 +73,28 @@ public class ChatRoomService {
         return chatRoom.orElse(null);
     }
 
-    public void setUnseenChatRoomOnMessage(String senderId, String recipientId){
-        //Busco el chatroom del usuario que recibe el mensaje
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(recipientId,senderId);
-        chatRoom.ifPresent(chatRoom1 -> {if(!chatRoom1.getState().name().equals("NEW")){chatRoom1.setState(ChatRoomState.UNSEEN);chatRoomRepository.save(chatRoom1);}});
+    public void updateChatRoomOnMessage(ChatMessage newMessage){
+        //Busco ambos chatrooms
+        Optional<ChatRoom> chatRoomRecipient = chatRoomRepository.findBySenderIdAndRecipientId(newMessage.getRecipientId(), newMessage.getSenderId());
+        Optional<ChatRoom> chatRoomSender = chatRoomRepository.findBySenderIdAndRecipientId(newMessage.getSenderId(), newMessage.getRecipientId());
+
+        //Seteo como no visto y actualizo la timestamp del chatroom del que recibe el mensaje
+        chatRoomRecipient.ifPresent(chatRoom1 -> {
+            if(!chatRoom1.getState().name().equals("NEW")) {
+                chatRoom1.setState(ChatRoomState.UNSEEN);
+                chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
+                chatRoomRepository.save(chatRoom1);
+            } else {
+                chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
+                chatRoomRepository.save(chatRoom1);
+            }
+        });
+
+        //Actualizo la timestamp del chatroom del que envia el mensaje
+        chatRoomSender.ifPresent(chatRoom1 -> {
+            chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
+            chatRoomRepository.save(chatRoom1);
+        });
     }
 
     public void setSeenChatRoomOnOpenChat(String openerId, String recipientId){
