@@ -117,7 +117,7 @@ public class MatchingController {
 
             response = new ResponseEntity<>(matchingService.getClientMatchedOrLikedWorkers(user.getId()), headers, HttpStatus.OK);
         }
-        catch(InvalidClientException e){
+        catch(InvalidClientException | InvalidInteractionException e){
             response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 

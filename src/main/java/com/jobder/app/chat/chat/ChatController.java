@@ -1,6 +1,7 @@
 package com.jobder.app.chat.chat;
 
 import com.jobder.app.authentication.models.users.User;
+import com.jobder.app.chat.chatroom.ChatRoomService;
 import com.jobder.app.chat.exceptions.ChatRoomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
+    private final ChatRoomService chatRoomService;
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
@@ -50,4 +52,5 @@ public class ChatController {
         return ResponseEntity
                 .ok(chatMessageService.findChatMessages(user.getId(), recipientId));
     }
+
 }

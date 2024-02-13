@@ -27,8 +27,8 @@ public class ChatMessageService {
                 .getChatRoomId(chatMessage.getSenderId(), chatMessage.getRecipientId(), false)
                 .orElseThrow(()->new ChatRoomException("Users doenst have a chat room between them!")); // You can create your own dedicated exception
         chatMessage.setChatId(chatId);
-        chatRoomService.setUnseenChatRoomOnMessage(chatMessage.getSenderId(),chatMessage.getRecipientId());
-        repository.save(chatMessage);
+        chatRoomService.updateChatRoomOnMessage(repository.save(chatMessage));
+
         return chatMessage;
     }
 
@@ -36,22 +36,5 @@ public class ChatMessageService {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
         chatRoomService.setSeenChatRoomOnOpenChat(senderId, recipientId);
         return chatId.map(repository::findByChatId).orElse(new ArrayList<>());
-    }
-
-    public List<ChatRoomUserResponseDTO> findChatUsers(String userId) {
-        List<ChatRoom> userChatRooms = chatRoomService.getUserChatRooms(userId);
-        List<ChatRoomUserResponseDTO> chatRoomUserResponseDTOS = new LinkedList<>();
-
-        for(ChatRoom chatRoom : userChatRooms){
-            if(userRepository.existsById(chatRoom.getRecipientId())) {
-                Optional<User> user = userRepository.findById(chatRoom.getRecipientId());
-                ChatRoomUserResponseDTO chatRoomUserResponseDTO = new ChatRoomUserResponseDTO();
-                chatRoomUserResponseDTO.setChatRoomState(chatRoom.getState());
-                chatRoomUserResponseDTO.setUser(user.orElseThrow());
-                chatRoomUserResponseDTOS.add(chatRoomUserResponseDTO);
-            }
-        }
-
-        return chatRoomUserResponseDTOS;
     }
 }
