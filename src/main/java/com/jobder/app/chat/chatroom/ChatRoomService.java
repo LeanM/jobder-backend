@@ -93,7 +93,7 @@ public class ChatRoomService {
         //Actualizo la timestamp del chatroom del que envia el mensaje
         chatRoomSender.ifPresent(chatRoom1 -> {
             chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
-            chatRoom1.setState(ChatRoomState.SEEN);
+            setSeenChatRoomOnOpenChat(newMessage.getSenderId(), newMessage.getRecipientId());
             chatRoomRepository.save(chatRoom1);
         });
     }
@@ -101,8 +101,17 @@ public class ChatRoomService {
     public void setSeenChatRoomOnOpenChat(String openerId, String recipientId){
         //Marco el chatroom como visto ya que se solicitaron los mensajes
         Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(openerId,recipientId);
-        chatRoom.ifPresent(chatRoom1 -> {chatRoom1.setState(ChatRoomState.SEEN);chatRoomRepository.save(chatRoom1);});
+        chatRoom.ifPresent(chatRoom1 -> {chatRoom1.setState(ChatRoomState.SEEN);setSeenMessagesOnSeenChatroom(chatRoom1.getChatId(), openerId);chatRoomRepository.save(chatRoom1);});
     }
+
+    public void setSeenMessagesOnSeenChatroom(String chatId, String openerId){
+        List<ChatMessage> notSeenMessages = chatMessageRepository.findByChatIdAndNotSeenByRecipient(chatId, openerId);
+        for(ChatMessage message : notSeenMessages){
+            message.setSeenByRecipient(true);
+            chatMessageRepository.save(message);
+        }
+    }
+
     public void deleteChatRooms(String senderId, String recipientId) throws ChatRoomException {
         Optional<ChatRoom> firstChatRoom = chatRoomRepository.findBySenderIdAndRecipientId(senderId,recipientId);
         Optional<ChatRoom> secondChatRoom = chatRoomRepository.findBySenderIdAndRecipientId(recipientId,senderId);
