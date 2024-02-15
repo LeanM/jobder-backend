@@ -41,7 +41,6 @@ public class ChatMessageService {
 
     public List<ChatMessage> findNotSeenChatMessages(String senderId, String recipientId) throws ChatRoomException {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
-        chatRoomService.setSeenChatRoomOnOpenChat(senderId, recipientId);
         if(!chatId.isPresent())
             throw new ChatRoomException("No exists chatroom between users!");
         List<ChatMessage> notSeenMessages = repository.findByChatIdAndNotSeenByRecipient(chatId.get(), senderId);
