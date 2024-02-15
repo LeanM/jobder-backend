@@ -4,6 +4,7 @@ import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.chat.chatroom.ChatRoomService;
 import com.jobder.app.chat.exceptions.ChatRoomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -51,6 +52,18 @@ public class ChatController {
                                                               @PathVariable String recipientId) {
         return ResponseEntity
                 .ok(chatMessageService.findChatMessages(user.getId(), recipientId));
+    }
+
+    @GetMapping("/messages/unseen/{recipientId}")
+    public ResponseEntity<?> findNotSeenChatMessages(@AuthenticationPrincipal User user,
+                                                                     @PathVariable String recipientId) {
+        try{
+            return ResponseEntity
+                    .ok(chatMessageService.findNotSeenChatMessages(user.getId(), recipientId));
+        } catch (ChatRoomException e) {
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
     }
 
 }
