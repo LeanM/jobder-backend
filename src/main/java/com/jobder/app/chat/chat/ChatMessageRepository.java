@@ -8,4 +8,7 @@ import java.util.List;
 
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
     List<ChatMessage> findByChatId(String chatId);
+
+    @Query("{ 'chatId' : ?0 , 'recipientId' : ?1, 'seenByRecipient' : false }")
+    List<ChatMessage> findByChatIdAndNotSeenByRecipient(String chatId, String recipientId);
 }

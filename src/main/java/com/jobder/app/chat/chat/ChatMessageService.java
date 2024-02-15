@@ -27,6 +27,7 @@ public class ChatMessageService {
                 .getChatRoomId(chatMessage.getSenderId(), chatMessage.getRecipientId(), false)
                 .orElseThrow(()->new ChatRoomException("Users doenst have a chat room between them!")); // You can create your own dedicated exception
         chatMessage.setChatId(chatId);
+        chatMessage.setSeenByRecipient(false);
         chatRoomService.updateChatRoomOnMessage(repository.save(chatMessage));
 
         return chatMessage;
@@ -36,5 +37,20 @@ public class ChatMessageService {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
         chatRoomService.setSeenChatRoomOnOpenChat(senderId, recipientId);
         return chatId.map(repository::findByChatId).orElse(new ArrayList<>());
+    }
+
+    public List<ChatMessage> findNotSeenChatMessages(String senderId, String recipientId) throws ChatRoomException {
+        var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
+        chatRoomService.setSeenChatRoomOnOpenChat(senderId, recipientId);
+        if(!chatId.isPresent())
+            throw new ChatRoomException("No exists chatroom between users!");
+        List<ChatMessage> notSeenMessages = repository.findByChatIdAndNotSeenByRecipient(chatId.get(), senderId);
+
+        for(ChatMessage message : notSeenMessages){
+            message.setSeenByRecipient(true);
+            repository.save(message);
+        }
+
+        return notSeenMessages;
     }
 }

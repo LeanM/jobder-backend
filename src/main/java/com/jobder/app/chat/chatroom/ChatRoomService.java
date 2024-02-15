@@ -93,6 +93,7 @@ public class ChatRoomService {
         //Actualizo la timestamp del chatroom del que envia el mensaje
         chatRoomSender.ifPresent(chatRoom1 -> {
             chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
+            chatRoom1.setState(ChatRoomState.SEEN);
             chatRoomRepository.save(chatRoom1);
         });
     }
