@@ -48,7 +48,7 @@ public class ChatMessageService {
 
         for(ChatMessage message : notSeenMessages){
             message.setSeenByRecipient(true);
-            //repository.save(message);
+            repository.save(message);
         }
 
         return notSeenMessages;
