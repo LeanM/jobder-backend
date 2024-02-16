@@ -35,7 +35,7 @@ public class ChatMessageService {
 
     public List<ChatMessage> findChatMessages(String senderId, String recipientId) {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
-        chatRoomService.setSeenChatRoomOnOpenChat(senderId, recipientId);
+        //chatRoomService.setSeenChatRoomOnOpenChat(senderId, recipientId);
         return chatId.map(repository::findByChatId).orElse(new ArrayList<>());
     }
 

@@ -22,4 +22,5 @@ public class ChatRoom {
     private String recipientId;
     private ChatRoomState state;
     private Date lastMessageTimestamp;
+    private Integer messageQuantity;
 }

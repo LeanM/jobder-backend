@@ -11,4 +11,11 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
 
     @Query("{ 'chatId' : ?0 , 'recipientId' : ?1, 'seenByRecipient' : false }")
     List<ChatMessage> findByChatIdAndNotSeenByRecipient(String chatId, String recipientId);
+
+    @Aggregation(pipeline = {
+            "{ '$match': { 'chatId' : ?0 } }",
+            "{ '$sort' : { 'timestamp' : 1 } }",
+            "{ '$limit' : 1 }",
+    })
+    ChatMessage findByChatIdAndOldestTimestamp(String chatId);
 }
