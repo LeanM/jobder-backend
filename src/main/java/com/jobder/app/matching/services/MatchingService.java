@@ -86,8 +86,6 @@ public class MatchingService {
             actualInteraction.setCreatedAt(new Date());
 
             interactionRepository.save(actualInteraction);
-
-            chatRoomService.setSeenChatRoomOnOpenChat(matchRequest.getWorkerId(), matchRequest.getClientId());
         }
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
     }

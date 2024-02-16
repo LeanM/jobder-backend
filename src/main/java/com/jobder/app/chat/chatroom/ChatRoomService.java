@@ -20,6 +20,8 @@ public class ChatRoomService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
 
+    private static final int MESSAGE_LIMIT = 30;
+
     public Optional<String> getChatRoomId(
             String senderId,
             String recipientId,
@@ -48,6 +50,8 @@ public class ChatRoomService {
                 .senderId(senderId)
                 .recipientId(recipientId)
                 .state(ChatRoomState.NEW)
+                .messageQuantity(0)
+                .lastMessageTimestamp(new Date())
                 .build();
 
         ChatRoom recipientSender = ChatRoom
@@ -56,6 +60,8 @@ public class ChatRoomService {
                 .senderId(recipientId)
                 .recipientId(senderId)
                 .state(ChatRoomState.NEW)
+                .messageQuantity(0)
+                .lastMessageTimestamp(new Date())
                 .build();
 
         chatRoomRepository.save(senderRecipient);
@@ -73,29 +79,39 @@ public class ChatRoomService {
         return chatRoom.orElse(null);
     }
 
-    public void updateChatRoomOnMessage(ChatMessage newMessage){
+    public void updateChatRoomOnMessage(ChatMessage newMessage) throws ChatRoomException {
         //Busco ambos chatrooms
-        Optional<ChatRoom> chatRoomRecipient = chatRoomRepository.findBySenderIdAndRecipientId(newMessage.getRecipientId(), newMessage.getSenderId());
-        Optional<ChatRoom> chatRoomSender = chatRoomRepository.findBySenderIdAndRecipientId(newMessage.getSenderId(), newMessage.getRecipientId());
+        ChatRoom chatRoomRecipient = chatRoomRepository.findBySenderIdAndRecipientId(newMessage.getRecipientId(), newMessage.getSenderId()).orElseThrow( () -> new ChatRoomException("No chatroom between users!"));
+        ChatRoom chatRoomSender = chatRoomRepository.findBySenderIdAndRecipientId(newMessage.getSenderId(), newMessage.getRecipientId()).orElseThrow( () -> new ChatRoomException("No chatroom between users!"));
 
         //Seteo como no visto y actualizo la timestamp del chatroom del que recibe el mensaje
-        chatRoomRecipient.ifPresent(chatRoom1 -> {
-            if(!chatRoom1.getState().name().equals("NEW")) {
-                chatRoom1.setState(ChatRoomState.UNSEEN);
-                chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
-                chatRoomRepository.save(chatRoom1);
-            } else {
-                chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
-                chatRoomRepository.save(chatRoom1);
-            }
-        });
+        chatRoomRecipient.setMessageQuantity(chatRoomRecipient.getMessageQuantity() + 1);
+        if(!chatRoomRecipient.getState().name().equals("NEW")) {
+            chatRoomRecipient.setState(ChatRoomState.UNSEEN);
+            chatRoomRecipient.setLastMessageTimestamp(newMessage.getTimestamp());
+            chatRoomRepository.save(chatRoomRecipient);
+        } else {
+            chatRoomRecipient.setLastMessageTimestamp(newMessage.getTimestamp());
+            chatRoomRepository.save(chatRoomRecipient);
+        }
 
         //Actualizo la timestamp del chatroom del que envia el mensaje
-        chatRoomSender.ifPresent(chatRoom1 -> {
-            chatRoom1.setLastMessageTimestamp(newMessage.getTimestamp());
-            setSeenChatRoomOnOpenChat(newMessage.getSenderId(), newMessage.getRecipientId());
-            chatRoomRepository.save(chatRoom1);
-        });
+        chatRoomSender.setMessageQuantity(chatRoomSender.getMessageQuantity() + 1);
+        chatRoomSender.setLastMessageTimestamp(newMessage.getTimestamp());
+        //setSeenChatRoomOnOpenChat(newMessage.getSenderId(), newMessage.getRecipientId());
+        chatRoomSender.setState(ChatRoomState.SEEN);
+        chatRoomRepository.save(chatRoomSender);
+
+        verifyChatMessagesLimit(chatRoomSender, chatRoomRecipient);
+    }
+
+    private void verifyChatMessagesLimit(ChatRoom chatRoomSender, ChatRoom chatRoomRecipient){
+        if(chatRoomSender.getMessageQuantity() > MESSAGE_LIMIT){
+            ChatMessage oldestMessage = chatMessageRepository.findByChatIdAndOldestTimestamp(chatRoomSender.getChatId());
+            chatMessageRepository.delete(oldestMessage);
+            chatRoomSender.setMessageQuantity(chatRoomSender.getMessageQuantity() - 1);
+            chatRoomRecipient.setMessageQuantity(chatRoomRecipient.getMessageQuantity() - 1);
+        }
     }
 
     public void setSeenChatRoomOnOpenChat(String openerId, String recipientId){
