@@ -40,27 +40,27 @@ public class JobderApplication {
 			List<User> workers = new LinkedList<>();
 
 			workers.add(new User("1", "Juan Perez", "juan@example.com", passwordEncoder.encode("test"), "profile1.jpg", RoleName.WORKER, "123456789",
-					"123 Main St", -38.8562944, -60.0670208, new Date(), "Plomero", AvailabilityStatus.AVAILABLE,
+					"123 Main St", -38.70610414693878, -62.269059204081636, new Date(), "Plomero", AvailabilityStatus.AVAILABLE,
 					"Plomero", "9 AM - 5 PM", 4.5f,12, null));
 
 			workers.add(new User("2", "Maria Rodriguez", "maria@example.com", passwordEncoder.encode("test"), "profile2.jpg", RoleName.WORKER, "987654321",
-					"456 Oak St", -38.8562944, -60.0670208, new Date(), "Electricista", AvailabilityStatus.NOT_AVAILABLE,
+					"456 Oak St", -38.70610414693878, -62.269059204081636, new Date(), "Electricista", AvailabilityStatus.NOT_AVAILABLE,
 					"Electricista", "10 AM - 6 PM", 4.8f,5, null));
 
 			workers.add(new User("3", "Carlos Gutierrez", "carlos@example.com", passwordEncoder.encode("test"), "profile3.jpg", RoleName.WORKER, "5551234567",
-					"789 Elm St", -38.8562944, -60.0670208, new Date(), "Electricista", AvailabilityStatus.AVAILABLE,
+					"789 Elm St", -38.70610414693878, -62.269059204081636, new Date(), "Electricista", AvailabilityStatus.AVAILABLE,
 					"Electricista", "8 AM - 4 PM", 4.2f, 21, null));
 
 			workers.add(new User("4", "Laura Martinez", "laura@example.com", passwordEncoder.encode("test"), "profile4.jpg", RoleName.WORKER, "3339876543",
-					"567 Pine St", -38.8562944, -60.0670208, new Date(), "Plomero", AvailabilityStatus.NOT_AVAILABLE,
+					"567 Pine St", -38.70610414693878, -62.269059204081636, new Date(), "Plomero", AvailabilityStatus.NOT_AVAILABLE,
 					"Plomero", "9 AM - 6 PM", 4.6f, 88, null));
 
 			workers.add(new User("5", "Daniel Hernandez", "daniel@example.com", passwordEncoder.encode("test"), "profile5.jpg", RoleName.WORKER, "6666543210",
-					"890 Oak St", -38.8562944, -60.0670208, new Date(), "Plomero", AvailabilityStatus.AVAILABLE,
+					"890 Oak St", -38.70610414693878, -62.269059204081636, new Date(), "Plomero", AvailabilityStatus.AVAILABLE,
 					"Plomero", "10 AM - 7 PM", 4.9f, 67, null));
 
 			workers.add(new User("6", "Isabel Lopez", "isabel@example.com", passwordEncoder.encode("test"), "profile6.jpg", RoleName.WORKER, "7777890123",
-					"123 Cedar St", -38.8562944, -60.0670208, new Date(), "Electricista", AvailabilityStatus.NOT_AVAILABLE,
+					"123 Cedar St", -38.70610414693878, -62.269059204081636, new Date(), "Electricista", AvailabilityStatus.NOT_AVAILABLE,
 					"Electricista", "11 AM - 8 PM", 4.7f, 54, null));
 
 			for(User user : workers){

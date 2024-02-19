@@ -1,11 +1,14 @@
 package com.jobder.app.authentication.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jobder.app.authentication.models.users.RoleName;
 import com.jobder.app.authentication.models.users.SearchParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -25,6 +28,7 @@ public class RegistrationDTO {
     private String address;
     private Double latitude;
     private Double longitude;
+    @JsonFormat(pattern="yyyy-MM-dd")
     private Date birthDate;
 
     //Worker

@@ -79,6 +79,7 @@ public class UserService {
         usuario.setEmail(registrationDTO.getEmail());
         usuario.setName(registrationDTO.getName());
         usuario.setPicture(registrationDTO.getPicture());
+        usuario.setRole(registrationDTO.getAccountRole());
 
         if(!registrationDTO.getIsGoogleRegister()) {
             usuario.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
@@ -87,8 +88,6 @@ public class UserService {
             usuario.setLatitude(registrationDTO.getLatitude());
             usuario.setLongitude(registrationDTO.getLongitude());
             usuario.setBirthDate(registrationDTO.getBirthDate());
-
-            usuario.setRole(registrationDTO.getAccountRole());
 
             if (registrationDTO.getAccountRole().name().equals("WORKER")) {
                 usuario.setWorkSpecialization(registrationDTO.getWorkSpecialization());
