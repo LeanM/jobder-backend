@@ -6,14 +6,19 @@ import com.jobder.app.chat.exceptions.ChatRoomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @CrossOrigin("*")
@@ -24,6 +29,19 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
     private final ChatRoomService chatRoomService;
+
+    private String getAuthorizationToken(ChatMessage message) {
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap((Message<?>) message);
+
+        List<String> authorization = Optional.of(headerAccessor)
+                .map($ -> $.getNativeHeader(WebSocketHttpHeaders.AUTHORIZATION))
+                .orElse(Collections.emptyList());
+        // if header does not exists returns null instead empty list :/
+
+        return authorization.stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Missing access token in Stomp message headers"));
+    }
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
