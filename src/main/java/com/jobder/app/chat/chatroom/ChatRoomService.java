@@ -120,6 +120,11 @@ public class ChatRoomService {
         chatRoom.ifPresent(chatRoom1 -> {chatRoom1.setState(ChatRoomState.SEEN);setSeenMessagesOnSeenChatroom(chatRoom1.getChatId(), openerId);chatRoomRepository.save(chatRoom1);});
     }
 
+    public void setUnseenChatRoom(String senderId, String recipientId){
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(senderId,recipientId);
+        chatRoom.ifPresent(chatRoom1 -> {chatRoom1.setState(ChatRoomState.UNSEEN);chatRoomRepository.save(chatRoom1);});
+    }
+
     public void setSeenMessagesOnSeenChatroom(String chatId, String openerId){
         List<ChatMessage> notSeenMessages = chatMessageRepository.findByChatIdAndNotSeenByRecipient(chatId, openerId);
         for(ChatMessage message : notSeenMessages){

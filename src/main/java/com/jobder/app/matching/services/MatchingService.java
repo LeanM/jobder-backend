@@ -86,6 +86,8 @@ public class MatchingService {
             actualInteraction.setCreatedAt(new Date());
 
             interactionRepository.save(actualInteraction);
+
+            chatRoomService.setUnseenChatRoom(actualInteraction.getWorkerId(), actualInteraction.getClientId());
         }
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
     }
