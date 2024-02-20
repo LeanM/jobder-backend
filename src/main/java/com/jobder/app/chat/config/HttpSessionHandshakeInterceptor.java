@@ -25,25 +25,23 @@ public class HttpSessionHandshakeInterceptor implements HandshakeInterceptor {
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
-            String token = extractTokenFromHeaders(servletRequest);
+            String token = extractTokenFromURI(servletRequest);
+
             if (token != null && jwtService.isTokenValid(token)) {
-                String username = jwtService.getUsernameFromToken(token);
-                attributes.put("username", username);
+                String email = jwtService.getUsernameFromToken(token);
+                attributes.put("username", email);
                 return true;
             } else {
-                return true;
+                return false;
             }
         }
         return true;
     }
 
-    private String extractTokenFromHeaders(ServletServerHttpRequest request) {
-        // Implement logic to extract JWT token from headers
-        System.out.println(request.getServletRequest().getHeader(HttpHeaders.AUTHORIZATION));
-        //final String authHeader=request.getHeader(HttpHeaders.AUTHORIZATION);
-
-
-        return null;
+    private String extractTokenFromURI(ServletServerHttpRequest request) {
+        // Implement logic to extract JWT token from URI
+        String access_token = request.getURI().getQuery();
+        return access_token.substring(13);
     }
 
     @Override

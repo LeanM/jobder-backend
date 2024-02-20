@@ -30,19 +30,6 @@ public class ChatController {
     private final ChatMessageService chatMessageService;
     private final ChatRoomService chatRoomService;
 
-    private String getAuthorizationToken(ChatMessage message) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap((Message<?>) message);
-
-        List<String> authorization = Optional.of(headerAccessor)
-                .map($ -> $.getNativeHeader(WebSocketHttpHeaders.AUTHORIZATION))
-                .orElse(Collections.emptyList());
-        // if header does not exists returns null instead empty list :/
-
-        return authorization.stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Missing access token in Stomp message headers"));
-    }
-
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
         //Realizar autenticacion al enviar un mensaje?
