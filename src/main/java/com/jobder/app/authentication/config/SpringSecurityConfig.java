@@ -39,6 +39,7 @@ public class SpringSecurityConfig {
                                 .requestMatchers("/chatroom/**").authenticated()
                                 .requestMatchers("/matching/**").authenticated()
                                 .requestMatchers("/chat/messages/**").authenticated()
+                                .requestMatchers("/ws/**").permitAll()
                                 .anyRequest().permitAll())
                 .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
