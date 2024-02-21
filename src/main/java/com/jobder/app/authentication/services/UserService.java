@@ -1,6 +1,7 @@
 package com.jobder.app.authentication.services;
 
 import com.jobder.app.authentication.config.JwtService;
+import com.jobder.app.authentication.dto.ChangePasswordDTO;
 import com.jobder.app.authentication.dto.JWTokenDTO;
 import com.jobder.app.authentication.dto.RefreshDTO;
 import com.jobder.app.authentication.dto.RegistrationDTO;
@@ -19,6 +20,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,6 +36,7 @@ public class UserService {
     private final JwtService jwtService;
     private final TokenService tokenService;
     private final RandomPasswordGenerator randomPasswordGenerator;
+    private final AuthenticationManager authenticationManager;
 
     @Autowired
     BCryptPasswordEncoder passwordEncoder;
@@ -85,6 +90,7 @@ public class UserService {
         usuario.setRole(registrationDTO.getAccountRole());
 
         if(!registrationDTO.getIsGoogleRegister()) {
+            usuario.setIsGoogleUser(false);
             usuario.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
             usuario.setPhoneNumber(registrationDTO.getPhoneNumber());
             usuario.setAddress(registrationDTO.getAddress());
@@ -103,6 +109,7 @@ public class UserService {
                 }
             }
         } else {
+            usuario.setIsGoogleUser(true);
             usuario.setPassword(passwordEncoder.encode(randomPasswordGenerator.getRandomPassword()));
         }
 
@@ -160,5 +167,18 @@ public class UserService {
         if(workerDTO.getWorkingHours() != null) workerToUpdate.setWorkingHours(workerDTO.getWorkingHours());
 
         userRepository.save(workerToUpdate);
+    }
+
+    public void updatePassword(User user, ChangePasswordDTO changePasswordDTO) throws InvalidAuthException {
+        if(user.getIsGoogleUser() != null && user.getIsGoogleUser()){
+            user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        } else {
+            try {
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), changePasswordDTO.getPreviousPassword()));
+                user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+            }catch (Exception e) {
+                throw new InvalidAuthException("Previous password is incorrect!");
+            }
+        }
     }
 }

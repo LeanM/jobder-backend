@@ -1,7 +1,9 @@
 package com.jobder.app.authentication.controllers;
 
+import com.jobder.app.authentication.dto.ChangePasswordDTO;
 import com.jobder.app.authentication.dto.userdtos.ClientDTO;
 import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
+import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.users.User;
@@ -53,6 +55,19 @@ public class UserController {
         }
 
          return response;
+    }
+
+    @PostMapping("/update/password")
+    public ResponseEntity<?> updatePassword(@AuthenticationPrincipal User user, @RequestBody ChangePasswordDTO changePasswordDTO){
+        ResponseEntity<?> response;
+        try{
+            userService.updatePassword(user, changePasswordDTO);
+            response = new ResponseEntity<>("Success", HttpStatus.OK);
+        }catch (InvalidAuthException e){
+            response = new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
     }
 
     @PostMapping("/update/CLIENT")
