@@ -1,5 +1,6 @@
 package com.jobder.app.authentication.dto.userdtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class UserDTO {
     private String address;
     private Double latitude;
     private Double longitude;
+    @JsonFormat(pattern="yyyy-MM-dd")
     private Date birthDate;
 
     public UserDTO(CommonDataDTO commonDataDTO) {

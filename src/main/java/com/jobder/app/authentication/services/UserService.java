@@ -4,8 +4,11 @@ import com.jobder.app.authentication.config.JwtService;
 import com.jobder.app.authentication.dto.JWTokenDTO;
 import com.jobder.app.authentication.dto.RefreshDTO;
 import com.jobder.app.authentication.dto.RegistrationDTO;
+import com.jobder.app.authentication.dto.userdtos.ClientDTO;
+import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
 import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
+import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.Token;
 import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import com.jobder.app.authentication.models.users.RoleName;
@@ -126,5 +129,36 @@ public class UserService {
         jwTokenDTO.setRole(user.getRole().name());
 
         return jwTokenDTO;
+    }
+
+    public void updateClient(String clientId, ClientDTO clientDTO) throws InvalidClientException{
+        User clientToUpdate = userRepository.findById(clientId).orElseThrow(()->new InvalidClientException("Client doesnt exists!"));
+
+        if(clientDTO.getAddress() != null) clientToUpdate.setAddress(clientDTO.getAddress());
+        if(clientDTO.getName() != null) clientToUpdate.setName(clientDTO.getName());
+        if(clientDTO.getBirthDate() != null) clientToUpdate.setBirthDate(clientDTO.getBirthDate());
+        if(clientDTO.getLatitude() != null) clientToUpdate.setLatitude(clientDTO.getLatitude());
+        if(clientDTO.getLongitude() != null) clientToUpdate.setLongitude(clientDTO.getLongitude());
+        if(clientDTO.getPhoneNumber() != null) clientToUpdate.setPhoneNumber(clientDTO.getPhoneNumber());
+
+        userRepository.save(clientToUpdate);
+    }
+
+    public void updateWorker(String workerId, WorkerDTO workerDTO) throws InvalidWorkerException {
+        User workerToUpdate = userRepository.findById(workerId).orElseThrow(()->new InvalidWorkerException("Client doesnt exists!"));
+
+        if(workerDTO.getAddress() != null) workerToUpdate.setAddress(workerDTO.getAddress());
+        if(workerDTO.getName() != null) workerToUpdate.setName(workerDTO.getName());
+        if(workerDTO.getBirthDate() != null) workerToUpdate.setBirthDate(workerDTO.getBirthDate());
+        if(workerDTO.getLatitude() != null) workerToUpdate.setLatitude(workerDTO.getLatitude());
+        if(workerDTO.getLongitude() != null) workerToUpdate.setLongitude(workerDTO.getLongitude());
+        if(workerDTO.getPhoneNumber() != null) workerToUpdate.setPhoneNumber(workerDTO.getPhoneNumber());
+
+        if(workerDTO.getWorkSpecialization() != null) workerToUpdate.setWorkSpecialization(workerDTO.getWorkSpecialization());
+        if(workerDTO.getAvailabilityStatus() != null) workerToUpdate.setAvailabilityStatus(workerDTO.getAvailabilityStatus());
+        if(workerDTO.getDescription() != null) workerToUpdate.setDescription(workerDTO.getDescription());
+        if(workerDTO.getWorkingHours() != null) workerToUpdate.setWorkingHours(workerDTO.getWorkingHours());
+
+        userRepository.save(workerToUpdate);
     }
 }
