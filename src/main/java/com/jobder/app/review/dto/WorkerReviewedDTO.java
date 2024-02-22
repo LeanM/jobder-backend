@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddReviewResponseDTO {
-    private String reviewId;
-    private String workerId;
-    private String content;
+public class WorkerReviewedDTO {
+    private String name;
+    private String picture;
 }

@@ -1,9 +1,12 @@
 package com.jobder.app.review.services;
 
+import com.jobder.app.authentication.exceptions.InvalidClientException;
+import com.jobder.app.authentication.exceptions.InvalidWorkerException;
+import com.jobder.app.authentication.models.users.User;
+import com.jobder.app.authentication.repositories.UserRepository;
+import com.jobder.app.authentication.services.UserService;
 import com.jobder.app.matching.services.MatchingService;
-import com.jobder.app.review.dto.AddReviewDTO;
-import com.jobder.app.review.dto.AddReviewResponseDTO;
-import com.jobder.app.review.dto.ReviewResponseDTO;
+import com.jobder.app.review.dto.*;
 import com.jobder.app.review.exceptions.ReviewException;
 import com.jobder.app.review.models.Review;
 import com.jobder.app.review.models.ReviewResponse;
@@ -25,23 +28,32 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ReviewResponseRepository reviewResponseRepository;
+    private final UserService userService;
 
     private final MatchingService matchingService;
 
-    public List<ReviewResponseDTO> getWorkerReviewsExample(String workerId){
+    public List<ReviewResponseDTO> getWorkerReviewsExample(String workerId) throws InvalidClientException, InvalidWorkerException {
         List<Review> reviews = reviewRepository.findByWorkerIdAndLimit(workerId,3);
         return formatReviews(reviews);
     }
 
-    public List<ReviewResponseDTO> getAllWorkerReviews(String workerId){
+    public List<ReviewResponseDTO> getAllWorkerReviews(String workerId) throws InvalidClientException, InvalidWorkerException {
         List<Review> reviews = reviewRepository.findByWorkerId(workerId);
         return formatReviews(reviews);
     }
 
-    private List<ReviewResponseDTO> formatReviews(List<Review> reviews){
+    private List<ReviewResponseDTO> formatReviews(List<Review> reviews) throws InvalidClientException, InvalidWorkerException {
         List<ReviewResponseDTO> reviewResponseDTOS = new LinkedList<>();
         for (Review review : reviews){
+            User clientMakedReview = userService.getClientById(review.getClientId());
+            ClientCreatedReviewDTO clientCreatedReviewDTO = new ClientCreatedReviewDTO(clientMakedReview.getName(), clientMakedReview.getPicture());
+
+            User workerReviewed = userService.getWorkerById(review.getWorkerId());
+            WorkerReviewedDTO workerReviewedDTO = new WorkerReviewedDTO(workerReviewed.getName(), workerReviewed.getPicture());
+
             ReviewResponseDTO reviewResponseDTO = new ReviewResponseDTO();
+            reviewResponseDTO.setWorker(workerReviewedDTO);
+            reviewResponseDTO.setClient(clientCreatedReviewDTO);
             reviewResponseDTO.setReview(review);
             Optional<ReviewResponse> reviewResponse = reviewResponseRepository.findByReviewId(review.getId());
             if(reviewResponse.isPresent()){
@@ -52,7 +64,7 @@ public class ReviewService {
         return reviewResponseDTOS;
     }
 
-    public void addReviewToWorker(AddReviewDTO addReviewDTO) throws ReviewException {
+    public void addReviewToWorker(AddReviewDTO addReviewDTO) throws ReviewException, InvalidWorkerException {
         if(!matchingService.existsMatchBetweenUsers(addReviewDTO.getClientId(), addReviewDTO.getWorkerId()))
             throw new ReviewException("Users doesnt have a match!");
 
@@ -62,6 +74,8 @@ public class ReviewService {
         newReview.setContent(addReviewDTO.getContent());
         newReview.setRating(addReviewDTO.getRating());
         newReview.setCreatedAt(new Date());
+
+        userService.addWorkerReview(addReviewDTO.getWorkerId());
 
         reviewRepository.save(newReview);
     }

@@ -16,6 +16,7 @@ import com.jobder.app.authentication.models.users.RoleName;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.TokenRepository;
 import com.jobder.app.authentication.repositories.UserRepository;
+import com.jobder.app.review.exceptions.ReviewException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,6 +48,22 @@ public class UserService {
 
     public Optional<User> getByEmail(String email){
         return userRepository.findByEmail(email);
+    }
+
+    public User getClientById(String clientId) throws InvalidClientException {
+        User client = userRepository.findById(clientId).orElseThrow(()-> new InvalidClientException("Client doesnt exists!"));
+        if(!client.getRole().equals(RoleName.CLIENT))
+            throw new InvalidClientException("User is not a client!");
+
+        return client;
+    }
+
+    public User getWorkerById(String workerId) throws InvalidWorkerException {
+        User worker = userRepository.findById(workerId).orElseThrow(()-> new InvalidWorkerException("Worker doesnt exists!"));
+        if(!worker.getRole().equals(RoleName.WORKER))
+            throw new InvalidWorkerException("User is not a worker!");
+
+        return worker;
     }
 
     public boolean existsEmail(String email){
@@ -103,6 +120,7 @@ public class UserService {
                 usuario.setAvailabilityStatus(AvailabilityStatus.MODERATED);
                 usuario.setAverageRating(1f);
                 usuario.setWorksFinished(0);
+                usuario.setTotalReviews(0);
             } else if (registrationDTO.getAccountRole().name().equals("CLIENT")) {
                 if (registrationDTO.getSearchParameters() != null) {
                     usuario.setSearchParameters(registrationDTO.getSearchParameters());
@@ -171,14 +189,23 @@ public class UserService {
 
     public void updatePassword(User user, ChangePasswordDTO changePasswordDTO) throws InvalidAuthException {
         if(user.getIsGoogleUser() != null && user.getIsGoogleUser()){
+            user.setIsGoogleUser(false);
             user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+            userRepository.save(user);
         } else {
             try {
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), changePasswordDTO.getPreviousPassword()));
                 user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+                userRepository.save(user);
             }catch (Exception e) {
                 throw new InvalidAuthException("Previous password is incorrect!");
             }
         }
+    }
+
+    public void addWorkerReview(String workerId) throws InvalidWorkerException {
+        User worker = userRepository.findById(workerId).orElseThrow(() -> new InvalidWorkerException("Worker doesnt exists!"));
+        worker.setTotalReviews(worker.getTotalReviews() + 1);
+        userRepository.save(worker);
     }
 }

@@ -11,5 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReviewResponseDTO {
     private Review review;
+    private ClientCreatedReviewDTO client;
+    private WorkerReviewedDTO worker;
     private ReviewResponse reviewResponse;
 }

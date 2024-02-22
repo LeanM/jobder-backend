@@ -43,6 +43,7 @@ public class User implements UserDetails {
     private String workingHours;
     private Float averageRating;
     private Integer worksFinished;
+    private Integer totalReviews;
 
     //Client
     private SearchParameters searchParameters;
@@ -79,7 +80,7 @@ public class User implements UserDetails {
 
     public WorkerDTO toWorker(){
         CommonDataDTO commonDataDTO = new CommonDataDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate, this.isGoogleUser);
-        WorkerDTO toReturn = new WorkerDTO(commonDataDTO,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating, this.worksFinished);
+        WorkerDTO toReturn = new WorkerDTO(commonDataDTO,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating, this.worksFinished, this.totalReviews);
 
         return toReturn;
     }

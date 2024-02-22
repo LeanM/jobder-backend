@@ -1,5 +1,7 @@
 package com.jobder.app.review.controllers;
 
+import com.jobder.app.authentication.exceptions.InvalidClientException;
+import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.matching.dto.InteractionRequest;
 import com.jobder.app.matching.exceptions.InvalidInteractionException;
@@ -31,7 +33,13 @@ public class ReviewController {
         ResponseEntity<?> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
-        response = new ResponseEntity(reviewService.getAllWorkerReviews(workerId), headers, HttpStatus.OK);
+
+        try{
+            response = new ResponseEntity(reviewService.getAllWorkerReviews(workerId), headers, HttpStatus.OK);
+        }catch (InvalidClientException | InvalidWorkerException e){
+            response = new ResponseEntity(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
+        }
+
 
         return response;
     }
@@ -41,7 +49,11 @@ public class ReviewController {
         ResponseEntity<?> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
-        response = new ResponseEntity(reviewService.getWorkerReviewsExample(workerId), headers, HttpStatus.OK);
+        try{
+            response = new ResponseEntity(reviewService.getWorkerReviewsExample(workerId), headers, HttpStatus.OK);
+        }catch (InvalidClientException | InvalidWorkerException e){
+            response = new ResponseEntity(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
+        }
 
         return response;
     }
@@ -56,7 +68,7 @@ public class ReviewController {
             reviewService.addReviewToWorker(addReviewDTO);
             response = new ResponseEntity<>("Added review!", headers, HttpStatus.OK);
         }
-        catch(ReviewException e){
+        catch(ReviewException | InvalidWorkerException e){
             response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 
