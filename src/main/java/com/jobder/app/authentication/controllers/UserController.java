@@ -1,6 +1,11 @@
 package com.jobder.app.authentication.controllers;
 
+import com.jobder.app.authentication.dto.ChangePasswordDTO;
+import com.jobder.app.authentication.dto.userdtos.ClientDTO;
+import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
+import com.jobder.app.authentication.exceptions.InvalidAuthException;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
+import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.services.TokenService;
 import com.jobder.app.authentication.services.UserService;
@@ -8,10 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin("*")
@@ -55,6 +57,43 @@ public class UserController {
          return response;
     }
 
+    @PostMapping("/update/password")
+    public ResponseEntity<?> updatePassword(@AuthenticationPrincipal User user, @RequestBody ChangePasswordDTO changePasswordDTO){
+        ResponseEntity<?> response;
+        try{
+            userService.updatePassword(user, changePasswordDTO);
+            response = new ResponseEntity<>("Success", HttpStatus.OK);
+        }catch (InvalidAuthException e){
+            response = new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
 
+        return response;
+    }
+
+    @PostMapping("/update/CLIENT")
+    public ResponseEntity<?> updateClient(@AuthenticationPrincipal User user, @RequestBody ClientDTO clientDTO){
+        ResponseEntity<?> response;
+        try{
+            userService.updateClient(user.getId(), clientDTO);
+            response = new ResponseEntity<>("Success", HttpStatus.OK);
+        }catch (InvalidClientException e){
+            response = new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
+    }
+
+    @PostMapping("/update/WORKER")
+    public ResponseEntity<?> updateWorker(@AuthenticationPrincipal User user, @RequestBody WorkerDTO workerDTO){
+        ResponseEntity<?> response;
+        try{
+            userService.updateWorker(user.getId(), workerDTO);
+            response = new ResponseEntity<>("Success", HttpStatus.OK);
+        }catch (InvalidWorkerException e){
+            response = new ResponseEntity<>("You are not a client!", HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
+    }
 
 }

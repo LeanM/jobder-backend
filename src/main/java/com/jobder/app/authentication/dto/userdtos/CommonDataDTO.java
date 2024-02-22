@@ -19,4 +19,5 @@ public class CommonDataDTO {
     private Double latitude;
     private Double longitude;
     private Date birthDate;
+    private Boolean isGoogleUser;
 }

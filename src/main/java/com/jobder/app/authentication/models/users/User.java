@@ -34,6 +34,8 @@ public class User implements UserDetails {
     private Double longitude;
     private Date birthDate;
 
+    private Boolean isGoogleUser;
+
     //Worker
     private String workSpecialization;
     private AvailabilityStatus availabilityStatus;
@@ -41,6 +43,7 @@ public class User implements UserDetails {
     private String workingHours;
     private Float averageRating;
     private Integer worksFinished;
+    private Integer totalReviews;
 
     //Client
     private SearchParameters searchParameters;
@@ -76,14 +79,14 @@ public class User implements UserDetails {
     }
 
     public WorkerDTO toWorker(){
-        CommonDataDTO commonDataDTO = new CommonDataDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate);
-        WorkerDTO toReturn = new WorkerDTO(commonDataDTO,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating, this.worksFinished);
+        CommonDataDTO commonDataDTO = new CommonDataDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate, this.isGoogleUser);
+        WorkerDTO toReturn = new WorkerDTO(commonDataDTO,this.workSpecialization,this.availabilityStatus,this.description,this.workingHours,this.averageRating, this.worksFinished, this.totalReviews);
 
         return toReturn;
     }
 
     public ClientDTO toClient(){
-        CommonDataDTO commonDataDTO = new CommonDataDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate);
+        CommonDataDTO commonDataDTO = new CommonDataDTO(this.id,this.name,this.email,this.picture,this.phoneNumber,this.address,this.latitude,this.longitude,this.birthDate, this.isGoogleUser);
         ClientDTO toReturn = new ClientDTO(commonDataDTO, this.searchParameters);
 
         return toReturn;

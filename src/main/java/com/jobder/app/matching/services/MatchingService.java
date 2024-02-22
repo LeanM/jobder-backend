@@ -216,4 +216,7 @@ public class MatchingService {
         return validatedWorkers;
     }
 
+    public boolean existsMatchBetweenUsers(String clientId, String workerId) {
+        return interactionRepository.existsMatchByClientIdAndWorkerId(clientId, workerId);
+    }
 }

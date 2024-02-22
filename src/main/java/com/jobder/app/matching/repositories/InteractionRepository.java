@@ -2,6 +2,8 @@ package com.jobder.app.matching.repositories;
 
 import com.jobder.app.matching.models.Interaction;
 import com.jobder.app.matching.models.InteractionType;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.ExistsQuery;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -13,6 +15,9 @@ public interface InteractionRepository extends MongoRepository<Interaction, Stri
     Interaction findInteractionByWorkerAndClient(String workerId, String clientId);
 
     boolean existsByClientIdAndWorkerId(String clientId, String workerId);
+
+    @ExistsQuery("{ 'clientId' : ?0 , 'workerId' : ?1 , 'interactionType' : 'MATCH' }")
+    boolean existsMatchByClientIdAndWorkerId(String clientId, String workerId);
 
     @Query("{ 'workerId' : ?0 , 'interactionType' : ?1 }")
     List<Interaction> findWorkerTypeInteractions(String workerId, InteractionType interactionType);
