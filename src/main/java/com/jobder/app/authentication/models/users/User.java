@@ -41,7 +41,7 @@ public class User implements UserDetails {
     private AvailabilityStatus availabilityStatus;
     private String description;
     private String workingHours;
-    private Float averageRating;
+    private String averageRating;
     private Integer worksFinished;
     private Integer totalReviews;
 

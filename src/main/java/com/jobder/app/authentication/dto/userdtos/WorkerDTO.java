@@ -15,11 +15,11 @@ public class WorkerDTO extends UserDTO {
     private AvailabilityStatus availabilityStatus;
     private String description;
     private String workingHours;
-    private Float averageRating;
+    private String averageRating;
     private Integer worksFinished;
     private Integer totalReviews;
 
-    public WorkerDTO(CommonDataDTO commonDataDTO, String workSpecialization, AvailabilityStatus availabilityStatus, String description, String workingHours, Float averageRating, Integer worksFinished, Integer totalReviews){
+    public WorkerDTO(CommonDataDTO commonDataDTO, String workSpecialization, AvailabilityStatus availabilityStatus, String description, String workingHours, String averageRating, Integer worksFinished, Integer totalReviews){
         super(commonDataDTO);
         this.workSpecialization = workSpecialization;
         this.availabilityStatus = availabilityStatus;
