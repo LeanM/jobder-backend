@@ -25,4 +25,7 @@ public interface InteractionRepository extends MongoRepository<Interaction, Stri
 
     @Query("{ 'clientId' : ?0 , '$or':[ {'interactionType' : 'MATCH' }, {'interactionType' : 'CLIENT_LIKE' } ] }")
     List<Interaction> findClientMatchesOrLikes(String clientId);
+
+    @Query("{ 'clientId' : ?0 , 'interactionType' : 'MATCH_COMPLETED' } }")
+    List<Interaction> findClientCompletedMatches(String clientId);
 }

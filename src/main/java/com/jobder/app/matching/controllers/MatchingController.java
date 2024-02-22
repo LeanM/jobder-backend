@@ -57,6 +57,23 @@ public class MatchingController {
         return response;
     }
 
+    @PostMapping(path = "/worker/matchComplete")
+    public ResponseEntity<String> completeMatchWithClient(@RequestBody MatchRequest matchRequest, @AuthenticationPrincipal User user){
+        ResponseEntity<String> response;
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        try{
+            matchRequest.setWorkerId(user.getId());
+            matchingService.completeMatchWithClient(matchRequest);
+            response = new ResponseEntity<>("Match completed!", headers, HttpStatus.OK);
+        }
+        catch(InvalidInteractionException | ChatRoomException | InvalidWorkerException e){
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
+    }
+
     @PostMapping(path = "/worker/reject")
     public ResponseEntity<String> rejectClient(@RequestBody MatchRequest rejectClientRequest, @AuthenticationPrincipal User user){
         ResponseEntity<String> response;
@@ -118,6 +135,22 @@ public class MatchingController {
             response = new ResponseEntity<>(matchingService.getClientMatchedOrLikedWorkers(user.getId()), headers, HttpStatus.OK);
         }
         catch(InvalidClientException | InvalidInteractionException e){
+            response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
+    }
+
+    @PostMapping(path = "/client/matchesCompletedWorkers")
+    public ResponseEntity<?> matchesCompletedWorkers(@AuthenticationPrincipal User user){
+        ResponseEntity<?> response;
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        try{
+
+            response = new ResponseEntity<>(matchingService.getMatchesCompletedWorkers(user.getId()), headers, HttpStatus.OK);
+        }
+        catch(InvalidClientException e){
             response = new ResponseEntity<>(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }
 

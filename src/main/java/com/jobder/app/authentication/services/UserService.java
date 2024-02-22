@@ -225,4 +225,10 @@ public class UserService {
 
         userRepository.save(worker);
     }
+
+    public void addFinishedWorkToWorker(String workerId) throws InvalidWorkerException {
+        User worker = userRepository.findById(workerId).orElseThrow(()->new InvalidWorkerException("Worker doesn't exists!"));
+
+        worker.setWorksFinished(worker.getWorksFinished() + 1);
+    }
 }
