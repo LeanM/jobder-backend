@@ -5,13 +5,11 @@ import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.users.RoleName;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
+import com.jobder.app.authentication.services.UserService;
 import com.jobder.app.chat.chatroom.ChatRoom;
 import com.jobder.app.chat.chatroom.ChatRoomService;
 import com.jobder.app.chat.exceptions.ChatRoomException;
-import com.jobder.app.matching.dto.InteractionRequest;
-import com.jobder.app.matching.dto.MatchRequest;
-import com.jobder.app.matching.dto.ClientMatchesReponseDTO;
-import com.jobder.app.matching.dto.WorkerMatchesResponseDTO;
+import com.jobder.app.matching.dto.*;
 import com.jobder.app.matching.exceptions.InvalidInteractionException;
 import com.jobder.app.matching.models.Interaction;
 import com.jobder.app.matching.models.InteractionType;
@@ -27,6 +25,7 @@ import java.util.*;
 public class MatchingService {
 
     private final UserRepository userRepository;
+    private final UserService userService;
     private final InteractionRepository interactionRepository;
     private final ChatRoomService chatRoomService;
 
@@ -70,6 +69,22 @@ public class MatchingService {
         if(!workerToInteract.getRole().name().equals("WORKER")){
             throw new InvalidInteractionException("Not a worker!");
         }
+    }
+
+    public void completeMatchWithClient(MatchRequest matchRequest) throws InvalidInteractionException, ChatRoomException, InvalidWorkerException {
+        if(userRepository.existsById(matchRequest.getClientId()) && userRepository.existsById(matchRequest.getWorkerId())){
+            Interaction actualInteraction = interactionRepository.findInteractionByWorkerAndClient(matchRequest.getWorkerId(), matchRequest.getClientId());
+            if( actualInteraction == null || !actualInteraction.getInteractionType().equals(InteractionType.MATCH) )
+                throw new InvalidInteractionException("Doesn't exists previous match between users!");
+            actualInteraction.setInteractionType(InteractionType.MATCH_COMPLETED);
+            actualInteraction.setClosedAt(new Date());
+
+            interactionRepository.save(actualInteraction);
+
+            userService.addFinishedWorkToWorker(matchRequest.getWorkerId());
+            chatRoomService.deleteChatRooms(actualInteraction.getWorkerId(), actualInteraction.getClientId());
+        }
+        else throw new InvalidInteractionException("Worker or Client doesn't exists!");
     }
 
     public void matchWithClient(MatchRequest matchRequest) throws InvalidInteractionException {
@@ -122,6 +137,33 @@ public class MatchingService {
             chatRoomService.deleteChatRooms(cancelMatchRequest.getClientId(), cancelMatchRequest.getWorkerId());
         }
         else throw new InvalidInteractionException("Worker or Client doesnt exists!");
+    }
+
+    public List<MatchesCompletedResponseDTO> getMatchesCompletedWorkers(String clientId) throws InvalidClientException {
+        User client = userRepository.findById(clientId).orElseThrow(() -> new InvalidClientException("No client with that ID"));
+        if(!client.getRole().name().equals("CLIENT")){
+            throw new InvalidClientException("You are not a Client!");
+        }
+
+        List<Interaction> clientCompletedMatches = interactionRepository.findClientCompletedMatches(clientId);
+
+        return fillClientCompletedMatches(clientCompletedMatches);
+    }
+
+    private List<MatchesCompletedResponseDTO> fillClientCompletedMatches(List<Interaction> clientCompletedMatches){
+        List<MatchesCompletedResponseDTO> matchesCompletedResponseDTOS = new LinkedList<>();
+
+        for(Interaction interaction : clientCompletedMatches){
+            MatchesCompletedResponseDTO matchesCompletedResponseDTO = new MatchesCompletedResponseDTO();
+            matchesCompletedResponseDTO.setInteraction(interaction);
+            User worker = userRepository.findById(interaction.getWorkerId()).orElse(null);
+            if(worker != null)
+                matchesCompletedResponseDTO.setUser(worker);
+
+            matchesCompletedResponseDTOS.add(matchesCompletedResponseDTO);
+        }
+
+        return matchesCompletedResponseDTOS;
     }
 
     public List<ClientMatchesReponseDTO> getClientMatchedOrLikedWorkers(String clientId) throws InvalidClientException, InvalidInteractionException {
