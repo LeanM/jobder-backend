@@ -14,15 +14,15 @@ public interface InteractionRepository extends MongoRepository<Interaction, Stri
     @Query("{ 'workerId' : ?0 , 'clientId' : ?1 }")
     Interaction findInteractionByWorkerAndClient(String workerId, String clientId);
 
-    boolean existsByClientIdAndWorkerId(String clientId, String workerId);
+    @ExistsQuery("{ 'clientId' : ?0 , 'workerId' : ?1 , '$or':[ {'interactionType' : 'MATCH' }, {'interactionType' : 'CLIENT_LIKE' } , {'interactionType' : 'CLIENT_DISLIKE' }, {'interactionType' : 'WORKER_REJECT' } ] }")
+    boolean existsCurrentInteractionByClientIdAndWorkerId(String clientId, String workerId);
 
-    @ExistsQuery("{ 'clientId' : ?0 , 'workerId' : ?1 , 'interactionType' : 'MATCH' }")
-    boolean existsMatchByClientIdAndWorkerId(String clientId, String workerId);
+    @ExistsQuery("{ 'clientId' : ?0 , 'workerId' : ?1 , 'interactionType' : 'MATCH_COMPLETED' }")
+    boolean existsMatchCompletedByClientIdAndWorkerId(String clientId, String workerId);
 
-    @Query("{ 'workerId' : ?0 , 'interactionType' : ?1 }")
-    List<Interaction> findWorkerTypeInteractions(String workerId, InteractionType interactionType);
+    @Query("{ 'workerId' : ?0 , '$or':[ {'interactionType' : 'MATCH' }, {'interactionType' : 'CLIENT_LIKE' } ] }")
+    List<Interaction> findWorkerMatchesOrLikes(String workerId);
 
-    @Query("{ 'clientId' : ?0 , 'interactionType' : ?1 }")
-    List<Interaction> findClientTypeInteractions(String clientId, InteractionType interactionType);
-
+    @Query("{ 'clientId' : ?0 , '$or':[ {'interactionType' : 'MATCH' }, {'interactionType' : 'CLIENT_LIKE' } ] }")
+    List<Interaction> findClientMatchesOrLikes(String clientId);
 }

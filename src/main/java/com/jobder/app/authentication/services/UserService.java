@@ -28,6 +28,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Optional;
 
 @Service
@@ -118,7 +120,7 @@ public class UserService {
             if (registrationDTO.getAccountRole().name().equals("WORKER")) {
                 usuario.setWorkSpecialization(registrationDTO.getWorkSpecialization());
                 usuario.setAvailabilityStatus(AvailabilityStatus.MODERATED);
-                usuario.setAverageRating(1f);
+                usuario.setAverageRating("1");
                 usuario.setWorksFinished(0);
                 usuario.setTotalReviews(0);
             } else if (registrationDTO.getAccountRole().name().equals("CLIENT")) {
@@ -203,9 +205,24 @@ public class UserService {
         }
     }
 
-    public void addWorkerReview(String workerId) throws InvalidWorkerException {
+    public void addWorkerReview(String workerId, Float ratingOfNewReview) throws InvalidWorkerException {
         User worker = userRepository.findById(workerId).orElseThrow(() -> new InvalidWorkerException("Worker doesnt exists!"));
-        worker.setTotalReviews(worker.getTotalReviews() + 1);
+
+        Float averageRating = Float.parseFloat(worker.getAverageRating());
+        int totalReviewsQuantity = worker.getTotalReviews();
+        Float totalRating = averageRating * totalReviewsQuantity;
+
+        totalRating += ratingOfNewReview;
+        totalReviewsQuantity += 1;
+
+        DecimalFormat df = new DecimalFormat("#.##");
+        df.setRoundingMode(RoundingMode.HALF_UP);
+
+        String newAverageRating = df.format(totalRating / totalReviewsQuantity);
+
+        worker.setTotalReviews(totalReviewsQuantity);
+        worker.setAverageRating(newAverageRating);
+
         userRepository.save(worker);
     }
 }

@@ -21,7 +21,6 @@ public class Interaction {
     private String workerId;
     @NonNull
     private InteractionType interactionType;
-    private InteractionState interactionState;
     private String clientProblemDescription;
     private AvailabilityStatus clientUrgency;
 

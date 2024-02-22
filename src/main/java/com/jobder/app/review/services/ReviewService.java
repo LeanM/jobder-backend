@@ -3,7 +3,6 @@ package com.jobder.app.review.services;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.users.User;
-import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.authentication.services.UserService;
 import com.jobder.app.matching.services.MatchingService;
 import com.jobder.app.review.dto.*;
@@ -12,11 +11,11 @@ import com.jobder.app.review.models.Review;
 import com.jobder.app.review.models.ReviewResponse;
 import com.jobder.app.review.repositories.ReviewRepository;
 import com.jobder.app.review.repositories.ReviewResponseRepository;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,7 +64,7 @@ public class ReviewService {
     }
 
     public void addReviewToWorker(AddReviewDTO addReviewDTO) throws ReviewException, InvalidWorkerException {
-        if(!matchingService.existsMatchBetweenUsers(addReviewDTO.getClientId(), addReviewDTO.getWorkerId()))
+        if(!matchingService.existsMatchCompletedBetweenUsers(addReviewDTO.getClientId(), addReviewDTO.getWorkerId()))
             throw new ReviewException("Users doesnt have a match!");
 
         Review newReview = new Review();
@@ -75,9 +74,28 @@ public class ReviewService {
         newReview.setRating(addReviewDTO.getRating());
         newReview.setCreatedAt(new Date());
 
-        userService.addWorkerReview(addReviewDTO.getWorkerId());
+        userService.addWorkerReview(addReviewDTO.getWorkerId(), newReview.getRating());
 
         reviewRepository.save(newReview);
+    }
+
+    private String obtainAverageRating(String workerId){
+        List<Review> workerReviews = reviewRepository.findByWorkerId(workerId);
+        Float total = 0f;
+        Float average = 1f;
+        int quantity = workerReviews.size();
+
+        for (Review review : workerReviews){
+            average += review.getRating();
+        }
+
+        if(quantity > 0)
+            average = total / quantity;
+
+        DecimalFormat df = new DecimalFormat("#.##");
+        df.setRoundingMode(RoundingMode.HALF_UP);
+
+        return df.format(average);
     }
 
     public void addReviewResponse(AddReviewResponseDTO addReviewResponseDTO) throws ReviewException {
