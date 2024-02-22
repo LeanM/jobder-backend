@@ -9,6 +9,5 @@ import lombok.*;
 @NoArgsConstructor
 public class MatchRequest {
     private String workerId;
-    @NonNull
     private String clientId;
 }

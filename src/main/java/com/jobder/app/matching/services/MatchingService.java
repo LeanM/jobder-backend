@@ -23,10 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.units.qual.C;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -44,9 +41,12 @@ public class MatchingService {
 
             interaction.setWorkerId(interactionRequest.getWorkerId());
             interaction.setClientId(interactionRequest.getClientId());
-            interaction.setInteractionType(interactionRequest.getInteractionType());
             interaction.setClientUrgency(interactionRequest.getClientUrgency());
             interaction.setCreatedAt(new Date());
+
+            if(interactionRequest.getInteractionType().equals(InteractionType.CLIENT_LIKE) || interactionRequest.getInteractionType().equals(InteractionType.CLIENT_DISLIKE)){
+                interaction.setInteractionType(interactionRequest.getInteractionType());
+            } else throw new InvalidInteractionException("Interaction type is invalid for this operation");
 
             if(interactionRequest.getClientProblemDescription() != null)
                 interaction.setClientProblemDescription(interactionRequest.getClientProblemDescription());
@@ -82,7 +82,6 @@ public class MatchingService {
             Interaction actualInteraction = interactionRepository.findInteractionByWorkerAndClient(matchRequest.getWorkerId(), matchRequest.getClientId());
             if( actualInteraction == null || !actualInteraction.getInteractionType().name().equals("CLIENT_LIKE") )
                 throw new InvalidInteractionException("Doesnt exists previous interaction between users!");
-            actualInteraction.setInteractionState(InteractionState.OPEN);
             actualInteraction.setInteractionType(InteractionType.MATCH);
             actualInteraction.setCreatedAt(new Date());
 
@@ -120,7 +119,7 @@ public class MatchingService {
             if(match == null || !match.getInteractionType().name().equals("MATCH"))
                 throw new InvalidInteractionException("Doenst exist a Match between worker and client!");
             match.setClosedAt(new Date());
-            match.setInteractionState(InteractionState.CLOSED);
+            match.setInteractionType(InteractionType.MATCH_CANCELLED);
             interactionRepository.save(match);
 
             chatRoomService.deleteChatRooms(cancelMatchRequest.getClientId(), cancelMatchRequest.getWorkerId());
@@ -133,46 +132,42 @@ public class MatchingService {
         if(!client.getRole().name().equals("CLIENT")){
             throw new InvalidClientException("You are not a Client!");
         }
-        List<ChatRoom> clientChatrooms = chatRoomService.getUserChatRoomsOrderedByLastMessage(clientId);
-        List<ClientMatchesReponseDTO> clientMatchedWorkers = new LinkedList<>();
 
+        List<Interaction> clientMatchesOrLikes = interactionRepository.findClientMatchesOrLikes(clientId);
 
-        fillClientMatchedOrLikedWorkers(clientMatchedWorkers, clientChatrooms);
-
-        return clientMatchedWorkers;
+        return fillClientMatchedOrLikedWorkers(clientMatchesOrLikes);
     }
 
-    private void fillClientMatchedOrLikedWorkers(List<ClientMatchesReponseDTO> toReturn, List<ChatRoom> clientChatrooms) throws InvalidInteractionException {
+    private List<ClientMatchesReponseDTO> fillClientMatchedOrLikedWorkers(List<Interaction> clientMatchesOrLikes) throws InvalidInteractionException {
+        List<ClientMatchesReponseDTO> toReturn = new LinkedList<>();
 
-        for(ChatRoom clientChatRoom : clientChatrooms){
-            Interaction interaction = interactionRepository.findInteractionByWorkerAndClient(clientChatRoom.getRecipientId(), clientChatRoom.getSenderId());
-            if(interaction.getInteractionType().equals(InteractionType.MATCH) || interaction.getInteractionType().equals(InteractionType.CLIENT_LIKE)){
-                Optional<User> worker = userRepository.findById(interaction.getWorkerId());
-                if(!worker.isPresent())
-                    throw new InvalidInteractionException("Invalid Interaction");
-
-                ClientMatchesReponseDTO clientMatchesReponseDTO = new ClientMatchesReponseDTO();
-                clientMatchesReponseDTO.setChatRoom(clientChatRoom);
-                clientMatchesReponseDTO.setUser(worker.get().toWorker());
-                clientMatchesReponseDTO.setInteraction(interaction);
-
-                toReturn.add(clientMatchesReponseDTO);
-            }
-        }
-        /*
-        for (Interaction interaction : clientMatchedOrLikedWorkers){
+        for (Interaction interaction : clientMatchesOrLikes){
             ClientMatchesReponseDTO clientMatchesReponseDTO = new ClientMatchesReponseDTO();
             ChatRoom chatRoomBetweenBoth = chatRoomService.getUserChatRoomWithOtherUser(interaction.getClientId(), interaction.getWorkerId());
             if(chatRoomBetweenBoth != null){
                 clientMatchesReponseDTO.setChatRoom(chatRoomBetweenBoth);
+                clientMatchesReponseDTO.setInteraction(interaction);
+                User worker = userRepository.findById(interaction.getWorkerId()).orElse(null);
+                if(worker != null){
+                    clientMatchesReponseDTO.setUser(worker.toWorker());
+                    toReturn.add(clientMatchesReponseDTO);
+                } else {
+                    //Borrar interaccion y chatroom
+                }
+            } else {
+                //Crear chatroom?
             }
-            clientMatchesReponseDTO.setInteraction(interaction);
-            clientMatchesReponseDTO.setUser(userRepository.findById(interaction.getWorkerId()).get().toWorker());
-
-            toReturn.add(clientMatchesReponseDTO);
         }
 
-         */
+        //Order by last message in chatroom
+        Collections.sort(toReturn, new Comparator<>() {
+            @Override
+            public int compare(ClientMatchesReponseDTO o1, ClientMatchesReponseDTO o2) {
+                return o2.getChatRoom().getLastMessageTimestamp().compareTo(o1.getChatRoom().getLastMessageTimestamp());
+            }
+        });
+
+        return toReturn;
     }
 
     public List<WorkerMatchesResponseDTO> getWorkerLikedOrMatchedClients(String workerId) throws InvalidWorkerException {
@@ -180,29 +175,42 @@ public class MatchingService {
         if(!worker.getRole().name().equals(RoleName.WORKER.name()))
             throw new InvalidWorkerException("You are not a Worker!");
 
-        List<WorkerMatchesResponseDTO> workerMatchesResponseDTOS = new LinkedList<>();
-        List<Interaction> workerMatchInteractions = interactionRepository.findWorkerTypeInteractions(workerId, InteractionType.MATCH);
-        List<Interaction> workerLikeInteractions = interactionRepository.findWorkerTypeInteractions(workerId, InteractionType.CLIENT_LIKE);
+        List<Interaction> workerMatchOrLikeInteractions = interactionRepository.findWorkerMatchesOrLikes(workerId);
 
-        fillWorkerMatchedOrLikedClients(workerMatchesResponseDTOS, workerLikeInteractions);
-        fillWorkerMatchedOrLikedClients(workerMatchesResponseDTOS, workerMatchInteractions);
-
-        return workerMatchesResponseDTOS;
+        return fillWorkerMatchedOrLikedClients(workerMatchOrLikeInteractions);
     }
 
-    private void fillWorkerMatchedOrLikedClients(List<WorkerMatchesResponseDTO> toReturn, List<Interaction> workerMatchedOrLikedClients){
+    private List<WorkerMatchesResponseDTO> fillWorkerMatchedOrLikedClients(List<Interaction> workerMatchOrLikeInteractions){
+        List<WorkerMatchesResponseDTO> toReturn = new LinkedList<>();
 
-        for (Interaction interaction : workerMatchedOrLikedClients){
-            WorkerMatchesResponseDTO workerMatchesResponseDTO = new WorkerMatchesResponseDTO();
+        for (Interaction interaction : workerMatchOrLikeInteractions){
+            WorkerMatchesResponseDTO workerMatchesReponseDTO = new WorkerMatchesResponseDTO();
             ChatRoom chatRoomBetweenBoth = chatRoomService.getUserChatRoomWithOtherUser(interaction.getWorkerId(), interaction.getClientId());
             if(chatRoomBetweenBoth != null){
-                workerMatchesResponseDTO.setChatRoom(chatRoomBetweenBoth);
+                workerMatchesReponseDTO.setChatRoom(chatRoomBetweenBoth);
+                workerMatchesReponseDTO.setInteraction(interaction);
+                User client = userRepository.findById(interaction.getClientId()).orElse(null);
+                if(client != null){
+                    workerMatchesReponseDTO.setUser(client.toClient());
+                    toReturn.add(workerMatchesReponseDTO);
+                }
+                else{
+                    //Borrar interaccion y chatroom
+                }
+            } else {
+                //Crear chatroom?
             }
-            workerMatchesResponseDTO.setInteraction(interaction);
-            workerMatchesResponseDTO.setUser(userRepository.findById(interaction.getClientId()).get().toClient());
-
-            toReturn.add(workerMatchesResponseDTO);
         }
+
+        //Order by last message in chatroom
+        Collections.sort(toReturn, new Comparator<>() {
+            @Override
+            public int compare(WorkerMatchesResponseDTO o1, WorkerMatchesResponseDTO o2) {
+                return o2.getChatRoom().getLastMessageTimestamp().compareTo(o1.getChatRoom().getLastMessageTimestamp());
+            }
+        });
+
+        return toReturn;
     }
 
     public List<WorkerSearchResponse> validateWorkers(User client, List<WorkerSearchResponse> workersToValidate){

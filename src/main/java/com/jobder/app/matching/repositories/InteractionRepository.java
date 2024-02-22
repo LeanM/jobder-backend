@@ -19,10 +19,9 @@ public interface InteractionRepository extends MongoRepository<Interaction, Stri
     @ExistsQuery("{ 'clientId' : ?0 , 'workerId' : ?1 , 'interactionType' : 'MATCH' }")
     boolean existsMatchByClientIdAndWorkerId(String clientId, String workerId);
 
-    @Query("{ 'workerId' : ?0 , 'interactionType' : ?1 }")
-    List<Interaction> findWorkerTypeInteractions(String workerId, InteractionType interactionType);
+    @Query("{ 'workerId' : ?0 , '$or':[ {'interactionType' : 'MATCH' }, {'interactionType' : 'CLIENT_LIKE' } ] }")
+    List<Interaction> findWorkerMatchesOrLikes(String workerId);
 
-    @Query("{ 'clientId' : ?0 , 'interactionType' : ?1 }")
-    List<Interaction> findClientTypeInteractions(String clientId, InteractionType interactionType);
-
+    @Query("{ 'clientId' : ?0 , '$or':[ {'interactionType' : 'MATCH' }, {'interactionType' : 'CLIENT_LIKE' } ] }")
+    List<Interaction> findClientMatchesOrLikes(String clientId);
 }
