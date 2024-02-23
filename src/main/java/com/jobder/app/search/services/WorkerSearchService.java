@@ -120,7 +120,7 @@ public class WorkerSearchService {
             Double distanceBetweenWorkerAndClient = distanceOfWorkerToClientInKm(worker, clientSearchInfo);
             if(distanceBetweenWorkerAndClient < defaultMinimumDistanceInKm){
                 WorkerSearchResponse workerSearchResponse = new WorkerSearchResponse();
-                workerSearchResponse.setWorker(worker.toWorker());
+                workerSearchResponse.setUser(worker.toWorker());
                 workerSearchResponse.setDistanceInKm(distanceBetweenWorkerAndClient);
                 filteredWorkers.add(workerSearchResponse);
             }

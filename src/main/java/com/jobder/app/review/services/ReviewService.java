@@ -65,7 +65,7 @@ public class ReviewService {
 
     public void addReviewToWorker(AddReviewDTO addReviewDTO) throws ReviewException, InvalidWorkerException {
         if(!matchingService.existsMatchCompletedBetweenUsers(addReviewDTO.getClientId(), addReviewDTO.getWorkerId()))
-            throw new ReviewException("Users doesnt have a match!");
+            throw new ReviewException("Users doesn't have a match completed!");
 
         Review newReview = new Review();
         newReview.setWorkerId(addReviewDTO.getWorkerId());

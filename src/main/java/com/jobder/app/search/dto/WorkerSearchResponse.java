@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WorkerSearchResponse {
-    private WorkerDTO worker;
+    private WorkerDTO user;
     private Double distanceInKm;
     private String secretKey;
 }
