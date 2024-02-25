@@ -14,7 +14,7 @@ import com.jobder.app.matching.exceptions.InvalidInteractionException;
 import com.jobder.app.matching.models.Interaction;
 import com.jobder.app.matching.models.InteractionType;
 import com.jobder.app.matching.repositories.InteractionRepository;
-import com.jobder.app.search.dto.WorkerSearchResponse;
+import com.jobder.app.search.dto.WorkerSearchDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -58,11 +58,15 @@ public class MatchingService {
 
     private void validateInteractionWithWorker(InteractionRequest interactionRequest) throws InvalidInteractionException {
         InteractionType interactionType = interactionRequest.getInteractionType();
-        if(!interactionType.name().equals("CLIENT_LIKE") && !interactionType.name().equals("CLIENT_DISLIKE"))
+        if(!interactionType.equals(InteractionType.CLIENT_LIKE) && !interactionType.equals(InteractionType.CLIENT_DISLIKE))
             throw new InvalidInteractionException("Invalid interaction type!");
 
         Interaction interaction = interactionRepository.findInteractionByWorkerAndClient(interactionRequest.getWorkerId(),interactionRequest.getClientId());
-        if(interaction != null)
+        if(interaction != null &&
+                (   interaction.getInteractionType().equals(InteractionType.MATCH) ||
+                    interaction.getInteractionType().equals(InteractionType.WORKER_REJECT)
+                )
+        )
             throw new InvalidInteractionException("Already exists an Interaction between worker and client!");
 
         User workerToInteract = userRepository.findById(interactionRequest.getWorkerId()).orElseThrow(() -> new InvalidInteractionException("Worker doesnt exist!"));
@@ -130,9 +134,7 @@ public class MatchingService {
             Interaction match = interactionRepository.findInteractionByWorkerAndClient(cancelMatchRequest.getWorkerId(), cancelMatchRequest.getClientId());
             if(match == null || !match.getInteractionType().name().equals("MATCH"))
                 throw new InvalidInteractionException("Doenst exist a Match between worker and client!");
-            match.setClosedAt(new Date());
-            match.setInteractionType(InteractionType.MATCH_CANCELLED);
-            interactionRepository.save(match);
+            interactionRepository.delete(match);
 
             chatRoomService.deleteChatRooms(cancelMatchRequest.getClientId(), cancelMatchRequest.getWorkerId());
         }
@@ -252,10 +254,10 @@ public class MatchingService {
         return toReturn;
     }
 
-    public List<WorkerSearchResponse> validateWorkers(User client, List<WorkerSearchResponse> workersToValidate){
-        List<WorkerSearchResponse> validatedWorkers = new LinkedList<>();
-        for(WorkerSearchResponse workerToValidate : workersToValidate){
-            if(!interactionRepository.existsCurrentInteractionByClientIdAndWorkerId(client.getId(),workerToValidate.getWorker().getId())){
+    public List<WorkerSearchDTO> validateWorkers(User client, List<WorkerSearchDTO> workersToValidate){
+        List<WorkerSearchDTO> validatedWorkers = new LinkedList<>();
+        for(WorkerSearchDTO workerToValidate : workersToValidate){
+            if(!interactionRepository.existsCurrentInteractionByClientIdAndWorkerId(client.getId(),workerToValidate.getUser().getId())){
                 //Si no poseen una interaccion
                 validatedWorkers.add(workerToValidate);
             }

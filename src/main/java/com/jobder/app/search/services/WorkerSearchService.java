@@ -1,13 +1,14 @@
 package com.jobder.app.search.services;
 
-import com.jobder.app.authentication.dto.userdtos.WorkerDTO;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.users.SearchParameters;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.repositories.UserRepository;
 import com.jobder.app.matching.services.MatchingService;
+import com.jobder.app.search.dto.PaginationResponseDTO;
 import com.jobder.app.search.dto.RequestClientSearchInfo;
-import com.jobder.app.search.dto.WorkerSearchResponse;
+import com.jobder.app.search.dto.WorkerSearchDTO;
+import com.jobder.app.search.dto.WorkerSearchResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -22,18 +23,18 @@ public class WorkerSearchService {
     private final UserRepository userRepository;
     private final MatchingService matchingService;
     private final int defaultMinimumDistanceInKm = 50;
-    private final int maxPageWorkers = 10;
+    private final int maxPageWorkers = 8;
     private final double EarthRadius = 6371000;
     private final double radians = 3.14159/180;
 
-    public List<WorkerSearchResponse> searchWorkers(RequestClientSearchInfo clientSearchInfo) throws InvalidClientException {
+    public WorkerSearchResponseDTO searchWorkers(RequestClientSearchInfo clientSearchInfo) throws InvalidClientException {
         updateUserSearchParameters(clientSearchInfo);
 
-        int pageNumber = 0;
+        int pageNumber = clientSearchInfo.getInitialPage();
         PageRequest pageRequest = PageRequest.of(pageNumber,maxPageWorkers);
 
-        List<WorkerSearchResponse> bestAverageRatingWorkersForUserLocation;
-        List<WorkerSearchResponse> workersFinalResult = new LinkedList<>();
+        List<WorkerSearchDTO> bestAverageRatingWorkersForUserLocation;
+        List<WorkerSearchDTO> workersFinalResult = new LinkedList<>();
 
         User searchingClient = userRepository.findById(clientSearchInfo.getId()).orElseThrow(() -> new InvalidClientException("No Client with that ID"));
 
@@ -45,18 +46,19 @@ public class WorkerSearchService {
 
         do {
             bestAverageRatingWorkersForUserLocation = obtainBestAverageRatingWorkersForUserInfo(clientSearchInfo, pageRequest);
-            pageNumber += 1;
+            if(!bestAverageRatingWorkersForUserLocation.isEmpty())
+                pageNumber += 1;
             pageRequest = PageRequest.of(pageNumber, maxPageWorkers);
-
-            List<WorkerSearchResponse> availableWorkers = verifyAvailableWorkers(searchingClient, bestAverageRatingWorkersForUserLocation);
+            List<WorkerSearchDTO> availableWorkers = verifyAvailableWorkers(searchingClient, bestAverageRatingWorkersForUserLocation);
 
             for (int i = 0; (i < availableWorkers.size()); i++){
                 workersFinalResult.add(availableWorkers.get(i));
             }
         } while (workersFinalResult.size() < maxPageWorkers && !bestAverageRatingWorkersForUserLocation.isEmpty());
 
+        WorkerSearchResponseDTO workerSearchResponseDTO = new WorkerSearchResponseDTO(workersFinalResult,new PaginationResponseDTO(pageNumber));
 
-        return workersFinalResult;
+        return workerSearchResponseDTO;
     }
 
     private void updateUserSearchParameters(RequestClientSearchInfo clientSearchInfo) throws InvalidClientException {
@@ -68,16 +70,17 @@ public class WorkerSearchService {
         } else throw new InvalidClientException("No Client with that ID");
     }
 
-    public List<WorkerSearchResponse> unloggedSearchWorkers(RequestClientSearchInfo clientSearchInfo) {
-        int pageNumber = 0;
+    public WorkerSearchResponseDTO unloggedSearchWorkers(RequestClientSearchInfo clientSearchInfo) {
+        int pageNumber = clientSearchInfo.getInitialPage();
         PageRequest pageRequest = PageRequest.of(pageNumber,maxPageWorkers);
 
-        List<WorkerSearchResponse> bestAverageRatingWorkersForUserLocation;
-        List<WorkerSearchResponse> workersFinalResult = new LinkedList<>();
+        List<WorkerSearchDTO> bestAverageRatingWorkersForUserLocation;
+        List<WorkerSearchDTO> workersFinalResult = new LinkedList<>();
 
         do {
             bestAverageRatingWorkersForUserLocation = obtainBestAverageRatingWorkersForUserInfo(clientSearchInfo, pageRequest);
-            pageNumber += 1;
+            if(!bestAverageRatingWorkersForUserLocation.isEmpty())
+                pageNumber += 1;
             pageRequest = PageRequest.of(pageNumber, maxPageWorkers);
 
             for (int i = 0; (i < bestAverageRatingWorkersForUserLocation.size()); i++){
@@ -85,11 +88,12 @@ public class WorkerSearchService {
             }
         } while (workersFinalResult.size() < maxPageWorkers && !bestAverageRatingWorkersForUserLocation.isEmpty());
 
+        WorkerSearchResponseDTO workerSearchResponseDTO = new WorkerSearchResponseDTO(workersFinalResult,new PaginationResponseDTO(pageNumber));
 
-        return workersFinalResult;
+        return workerSearchResponseDTO;
     }
 
-    private List<WorkerSearchResponse> verifyAvailableWorkers(User searchingClient, List<WorkerSearchResponse> workersToVerify){
+    private List<WorkerSearchDTO> verifyAvailableWorkers(User searchingClient, List<WorkerSearchDTO> workersToVerify){
        return matchingService.validateWorkers(searchingClient, workersToVerify);
     }
 
@@ -102,7 +106,7 @@ public class WorkerSearchService {
         return searchMinimumDistanceInKm;
     }
 
-    private List<WorkerSearchResponse> obtainBestAverageRatingWorkersForUserInfo(RequestClientSearchInfo clientSearchInfo, PageRequest pageRequest){
+    private List<WorkerSearchDTO> obtainBestAverageRatingWorkersForUserInfo(RequestClientSearchInfo clientSearchInfo, PageRequest pageRequest){
         List<User> toReturn;
 
         if(clientSearchInfo.getWorkSpecialization() == "" || clientSearchInfo.getWorkSpecialization() == null){
@@ -114,15 +118,15 @@ public class WorkerSearchService {
         return filterCloseWorkers(clientSearchInfo, toReturn);
     }
 
-    private List<WorkerSearchResponse> filterCloseWorkers(RequestClientSearchInfo clientSearchInfo, List<User> workers) {
-        List<WorkerSearchResponse> filteredWorkers = new LinkedList<>();
+    private List<WorkerSearchDTO> filterCloseWorkers(RequestClientSearchInfo clientSearchInfo, List<User> workers) {
+        List<WorkerSearchDTO> filteredWorkers = new LinkedList<>();
         for (User worker : workers){
             Double distanceBetweenWorkerAndClient = distanceOfWorkerToClientInKm(worker, clientSearchInfo);
             if(distanceBetweenWorkerAndClient < defaultMinimumDistanceInKm){
-                WorkerSearchResponse workerSearchResponse = new WorkerSearchResponse();
-                workerSearchResponse.setWorker(worker.toWorker());
-                workerSearchResponse.setDistanceInKm(distanceBetweenWorkerAndClient);
-                filteredWorkers.add(workerSearchResponse);
+                WorkerSearchDTO workerSearchDTO = new WorkerSearchDTO();
+                workerSearchDTO.setUser(worker.toWorker());
+                workerSearchDTO.setDistanceInKm(distanceBetweenWorkerAndClient);
+                filteredWorkers.add(workerSearchDTO);
             }
         }
 

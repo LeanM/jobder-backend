@@ -68,6 +68,16 @@ public class JobderApplication {
 					userRepository.save(user);
 				}
 			}
+
+			for (int i = 7; i < 30; i++){
+				User worker = new User(i + "a", "Trabajador " + i, "worker" + i + "@example.com", passwordEncoder.encode("test"), null, RoleName.WORKER, "7777890123",
+						"123 Cedar St", -38.70610414693878, -62.269059204081636, new Date(),false, "Electricista", AvailabilityStatus.AVAILABLE,
+						"Electricista", "11 AM - 8 PM", "3.2", 54, 0, null);
+
+				if(!userRepository.existsByEmail(worker.getEmail())){
+					userRepository.save(worker);
+				}
+			}
 		}
 	}
 }

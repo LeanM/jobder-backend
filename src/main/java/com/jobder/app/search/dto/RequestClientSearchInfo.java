@@ -4,6 +4,7 @@ import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Data
 @AllArgsConstructor
@@ -16,4 +17,6 @@ public class RequestClientSearchInfo {
     private AvailabilityStatus availabilityStatus;
     private Double latitude;
     private Double longitude;
+    @NonNull
+    private Integer initialPage;
 }

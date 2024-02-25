@@ -3,7 +3,8 @@ package com.jobder.app.search.controllers;
 import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.search.dto.RequestClientSearchInfo;
-import com.jobder.app.search.dto.WorkerSearchResponse;
+import com.jobder.app.search.dto.WorkerSearchDTO;
+import com.jobder.app.search.dto.WorkerSearchResponseDTO;
 import com.jobder.app.search.services.WorkerSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +32,7 @@ public class WorkerSearchController {
 
         try {
             clientSearchInfo.setId(clientSearching.getId());
-            List<WorkerSearchResponse> toReturn = workerSearchService.searchWorkers(clientSearchInfo);
+            WorkerSearchResponseDTO toReturn = workerSearchService.searchWorkers(clientSearchInfo);
             response = new ResponseEntity<>(toReturn,headers,HttpStatus.OK);
         }
         catch(InvalidClientException e){
@@ -42,12 +43,12 @@ public class WorkerSearchController {
     }
 
     @PostMapping (path = "/unlogged/searchWorkers")
-    public ResponseEntity<List<WorkerSearchResponse>> searchWorkersUnlogged(@RequestBody RequestClientSearchInfo unloggedSearchInfo){
-        ResponseEntity<List<WorkerSearchResponse>> response;
+    public ResponseEntity<WorkerSearchResponseDTO> searchWorkersUnlogged(@RequestBody RequestClientSearchInfo unloggedSearchInfo){
+        ResponseEntity<WorkerSearchResponseDTO> response;
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
 
-        List<WorkerSearchResponse> toReturn = workerSearchService.unloggedSearchWorkers(unloggedSearchInfo);
+        WorkerSearchResponseDTO toReturn = workerSearchService.unloggedSearchWorkers(unloggedSearchInfo);
 
         response = new ResponseEntity<>(toReturn,headers,HttpStatus.OK);
 
