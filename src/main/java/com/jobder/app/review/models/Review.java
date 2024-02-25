@@ -1,5 +1,6 @@
 package com.jobder.app.review.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,6 @@ public class Review {
     private String content;
     private Float rating;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date createdAt;
 }
