@@ -14,7 +14,7 @@ import com.jobder.app.matching.exceptions.InvalidInteractionException;
 import com.jobder.app.matching.models.Interaction;
 import com.jobder.app.matching.models.InteractionType;
 import com.jobder.app.matching.repositories.InteractionRepository;
-import com.jobder.app.search.dto.WorkerSearchResponse;
+import com.jobder.app.search.dto.WorkerSearchDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -254,9 +254,9 @@ public class MatchingService {
         return toReturn;
     }
 
-    public List<WorkerSearchResponse> validateWorkers(User client, List<WorkerSearchResponse> workersToValidate){
-        List<WorkerSearchResponse> validatedWorkers = new LinkedList<>();
-        for(WorkerSearchResponse workerToValidate : workersToValidate){
+    public List<WorkerSearchDTO> validateWorkers(User client, List<WorkerSearchDTO> workersToValidate){
+        List<WorkerSearchDTO> validatedWorkers = new LinkedList<>();
+        for(WorkerSearchDTO workerToValidate : workersToValidate){
             if(!interactionRepository.existsCurrentInteractionByClientIdAndWorkerId(client.getId(),workerToValidate.getUser().getId())){
                 //Si no poseen una interaccion
                 validatedWorkers.add(workerToValidate);

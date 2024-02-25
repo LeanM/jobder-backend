@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class WorkerSearchResponse {
+public class WorkerSearchDTO {
     private WorkerDTO user;
     private Double distanceInKm;
     private String secretKey;
