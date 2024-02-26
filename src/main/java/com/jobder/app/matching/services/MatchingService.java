@@ -33,12 +33,19 @@ public class MatchingService {
         if(userRepository.existsById(interactionRequest.getClientId()) && userRepository.existsById(interactionRequest.getWorkerId())){
             validateInteractionWithWorker(interactionRequest);
 
-            Interaction interaction = new Interaction();
+            Interaction interaction;
 
-            interaction.setWorkerId(interactionRequest.getWorkerId());
-            interaction.setClientId(interactionRequest.getClientId());
-            interaction.setClientUrgency(interactionRequest.getClientUrgency());
-            interaction.setCreatedAt(new Date());
+            if(existsMatchCompletedBetweenUsers(interactionRequest.getClientId(), interactionRequest.getWorkerId())){
+                interaction = interactionRepository.findInteractionByWorkerAndClient(interactionRequest.getWorkerId(), interactionRequest.getClientId());
+                interaction.setCreatedAt(new Date());
+                interaction.setClosedAt(null);
+            } else {
+                interaction = new Interaction();
+                interaction.setWorkerId(interactionRequest.getWorkerId());
+                interaction.setClientId(interactionRequest.getClientId());
+                interaction.setClientUrgency(interactionRequest.getClientUrgency());
+                interaction.setCreatedAt(new Date());
+            }
 
             if(interactionRequest.getInteractionType().equals(InteractionType.CLIENT_LIKE) || interactionRequest.getInteractionType().equals(InteractionType.CLIENT_DISLIKE)){
                 interaction.setInteractionType(interactionRequest.getInteractionType());
