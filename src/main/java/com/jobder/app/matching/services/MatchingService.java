@@ -53,6 +53,7 @@ public class MatchingService {
 
             if(interactionRequest.getClientProblemDescription() != null)
                 interaction.setClientProblemDescription(interactionRequest.getClientProblemDescription());
+            else interaction.setClientProblemDescription("No especificado.");
 
             interactionRepository.save(interaction);
 
