@@ -7,6 +7,7 @@ import com.jobder.app.matching.dto.InteractionRequest;
 import com.jobder.app.matching.exceptions.InvalidInteractionException;
 import com.jobder.app.review.dto.AddReviewDTO;
 import com.jobder.app.review.dto.AddReviewResponseDTO;
+import com.jobder.app.review.dto.RequestWorkerReviewsDTO;
 import com.jobder.app.review.dto.ReviewResponseDTO;
 import com.jobder.app.review.exceptions.ReviewException;
 import com.jobder.app.review.models.Review;
@@ -51,6 +52,22 @@ public class ReviewController {
         headers.add("Content-Type", "application/json");
         try{
             response = new ResponseEntity(reviewService.getWorkerReviewsExample(workerId), headers, HttpStatus.OK);
+        }catch (InvalidClientException | InvalidWorkerException e){
+            response = new ResponseEntity(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
+        }
+
+        return response;
+    }
+
+    @PostMapping(path = "/myreviews/worker")
+    public ResponseEntity<?> getMyReviews(@RequestBody RequestWorkerReviewsDTO requestWorkerReviewsDTO, @AuthenticationPrincipal User worker){
+        ResponseEntity<?> response;
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+
+        try{
+            requestWorkerReviewsDTO.setWorkerId(worker.getId());
+            response = new ResponseEntity(reviewService.getWorkerReviewsPage(requestWorkerReviewsDTO), headers, HttpStatus.OK);
         }catch (InvalidClientException | InvalidWorkerException e){
             response = new ResponseEntity(e.getMessage(), headers, HttpStatus.BAD_REQUEST);
         }

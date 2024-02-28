@@ -4,6 +4,8 @@ import com.jobder.app.authentication.exceptions.InvalidClientException;
 import com.jobder.app.authentication.exceptions.InvalidWorkerException;
 import com.jobder.app.authentication.models.users.User;
 import com.jobder.app.authentication.services.UserService;
+import com.jobder.app.matching.exceptions.InvalidInteractionException;
+import com.jobder.app.matching.models.Interaction;
 import com.jobder.app.matching.services.MatchingService;
 import com.jobder.app.review.dto.*;
 import com.jobder.app.review.exceptions.ReviewException;
@@ -12,6 +14,8 @@ import com.jobder.app.review.models.ReviewResponse;
 import com.jobder.app.review.repositories.ReviewRepository;
 import com.jobder.app.review.repositories.ReviewResponseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
@@ -28,8 +32,9 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewResponseRepository reviewResponseRepository;
     private final UserService userService;
-
     private final MatchingService matchingService;
+
+    private static final int MAX_PAGE_REVIEWS = 10;
 
     public List<ReviewResponseDTO> getWorkerReviewsExample(String workerId) throws InvalidClientException, InvalidWorkerException {
         List<Review> reviews = reviewRepository.findByWorkerIdAndLimit(workerId,3);
@@ -38,6 +43,14 @@ public class ReviewService {
 
     public List<ReviewResponseDTO> getAllWorkerReviews(String workerId) throws InvalidClientException, InvalidWorkerException {
         List<Review> reviews = reviewRepository.findByWorkerId(workerId);
+        return formatReviews(reviews);
+    }
+
+    public List<ReviewResponseDTO> getWorkerReviewsPage(RequestWorkerReviewsDTO requestWorkerReviewsDTO) throws InvalidClientException, InvalidWorkerException {
+        int pageNumber = requestWorkerReviewsDTO.getPageNumber();
+        PageRequest pageRequest = PageRequest.of(pageNumber, MAX_PAGE_REVIEWS);
+        List<Review> reviews = reviewRepository.findByWorkerIdWithPagination(requestWorkerReviewsDTO.getWorkerId(), pageRequest);
+
         return formatReviews(reviews);
     }
 
@@ -66,6 +79,9 @@ public class ReviewService {
     public void addReviewToWorker(AddReviewDTO addReviewDTO) throws ReviewException, InvalidWorkerException {
         if(!matchingService.existsMatchCompletedBetweenUsers(addReviewDTO.getClientId(), addReviewDTO.getWorkerId()))
             throw new ReviewException("Users doesn't have a match completed!");
+
+        //Interaction completedMatchBetweenUsers = matchingService.obtainClientAndWorkerCompletedMatch(addReviewDTO.getClientId(), addReviewDTO.getWorkerId());
+        //Posibilidad de agregar esta info al documento de review
 
         Review newReview = new Review();
         newReview.setWorkerId(addReviewDTO.getWorkerId());

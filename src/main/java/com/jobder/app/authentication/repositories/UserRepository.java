@@ -1,6 +1,5 @@
 package com.jobder.app.authentication.repositories;
 
-import com.jobder.app.authentication.models.users.AvailabilityStatus;
 import com.jobder.app.authentication.models.users.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
