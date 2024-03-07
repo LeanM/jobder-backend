@@ -277,4 +277,9 @@ public class MatchingService {
     public boolean existsMatchCompletedBetweenUsers(String clientId, String workerId) {
         return interactionRepository.existsMatchCompletedByClientIdAndWorkerId(clientId, workerId);
     }
+
+    public Interaction obtainClientAndWorkerCompletedMatch(String clientId, String workerId) throws InvalidInteractionException {
+        Interaction interaction = interactionRepository.findClientAndWorkerCompletedMatch(clientId, workerId).orElseThrow(()-> new InvalidInteractionException("There is no completed match between users!"));
+        return interaction;
+    }
 }

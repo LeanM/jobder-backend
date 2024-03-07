@@ -1,7 +1,6 @@
 package com.jobder.app.review.repositories;
 
-import com.jobder.app.matching.models.Interaction;
-import com.jobder.app.matching.models.InteractionType;
+import org.springframework.data.domain.Pageable;
 import com.jobder.app.review.models.Review;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -13,6 +12,9 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
 
     @Query("{ 'workerId' : ?0  }")
     List<Review> findByWorkerId(String workerId);
+
+    @Query("{ 'workerId' : ?0  }")
+    List<Review> findByWorkerIdWithPagination(String workerId, Pageable pageable);
 
     @Aggregation(pipeline = {
             "{ '$match': { 'workerId' : ?0 } }",
